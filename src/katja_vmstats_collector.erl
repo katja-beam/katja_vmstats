@@ -47,7 +47,8 @@
 % API
 -export([
   start_link/0,
-  stop/0
+  stop/0,
+  collect/1
 ]).
 
 % gen_server
@@ -72,6 +73,13 @@ start_link() ->
 stop() ->
   gen_server:call(?MODULE, terminate).
 
+% @doc Collects the specified metrics and sends them to Riemann.
+-spec collect(atom() | [atom()]) -> ok.
+collect(Metric) when is_atom(Metric) ->
+  collect([Metric]);
+collect(Metrics) ->
+  gen_server:cast(?MODULE, {collect, Metrics}).
+
 % gen_server
 
 % @hidden
@@ -94,6 +102,10 @@ handle_call(_Request, _From, State) ->
   {reply, ignored, State}.
 
 % @hidden
+handle_cast({collect, Metrics}, #collector_state{service=Service}=S) ->
+  {ok, Events} = create_events(Service, Metrics),
+  ok = katja:send_events(Events),
+  {noreply, S};
 handle_cast(_Msg, State) ->
   {noreply, State}.
 
