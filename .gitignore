@@ -1,0 +1,13 @@
+.DS_Store
+.eunit/
+.rebar/
+deps/
+doc/*
+!doc/overview.edoc
+ebin/
+logs/
+erl_crash.dump
+*.analysis
+*.beam
+*.plt
+*.trace

@@ -1,0 +1,16 @@
+{application, katja_vmstats, [
+  {description, "Easily send information about the Erlang VM to Riemann."},
+  {vsn, "0.1"},
+  {modules, []},
+  {registered, [
+    katja_vmstats_sup,
+    katja_vmstats_collector
+  ]},
+  {applications, [
+    kernel,
+    stdlib,
+    katja
+  ]},
+  {mod, {katja_vmstats_app, []}},
+  {env, []}
+]}.
