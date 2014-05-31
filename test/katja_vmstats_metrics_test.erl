@@ -12,6 +12,9 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+error_logger_message_queue_test() ->
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:error_logger_message_queue()).
+
 loaded_modules_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:loaded_modules()).
 

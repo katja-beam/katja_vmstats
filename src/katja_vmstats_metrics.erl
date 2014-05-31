@@ -17,6 +17,7 @@
 
 % API
 -export([
+  error_logger_message_queue/0,
   loaded_modules/0,
   memory_atoms/0,
   memory_binaries/0,
@@ -34,6 +35,13 @@
 ]).
 
 % API
+
+% @doc Returns the size of the `error_logger' message queue at the local node.
+-spec error_logger_message_queue() -> non_neg_integer().
+error_logger_message_queue() ->
+  ErrorLogger = whereis(error_logger),
+  {message_queue_len, Size} = process_info(ErrorLogger, message_queue_len),
+  Size.
 
 % @doc Returns the number of currently loaded modules at the local node.
 -spec loaded_modules() -> pos_integer().
@@ -101,6 +109,6 @@ process_utilization() ->
   process_count() / process_limit().
 
 % @doc Returns the total length of the run queues, that is, the number of processes that are ready to run on all available run queues.
--spec run_queue() -> pos_integer().
+-spec run_queue() -> non_neg_integer().
 run_queue() ->
   erlang:statistics(run_queue).

@@ -21,6 +21,7 @@
   [
     {interval, 1000},
     {metrics, [
+      error_logger_message_queue,
       loaded_modules,
       memory_atoms,
       memory_binaries,
@@ -132,10 +133,9 @@ code_change(_OldVsn, State, _Extra) ->
 create_events(Service, Metrics) ->
   Timestamp = current_timestamp(),
   Events = lists:map(fun(Metric) ->
-    Event = [{service, Service}, {time, Timestamp}],
-    MetricValue = katja_vmstats_metrics:Metric(),
     MetricTag = atom_to_list(Metric),
-    [{metric, MetricValue}, {tags, [MetricTag]} | Event]
+    MetricValue = katja_vmstats_metrics:Metric(),
+    [{service, Service}, {time, Timestamp}, {tags, [MetricTag]}, {metric, MetricValue}]
   end, Metrics),
   {ok, Events}.
 
