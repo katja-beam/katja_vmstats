@@ -60,6 +60,10 @@ ok = katja_vmstats:collect([ets_limit, ets_utilization]).
 
 `katja_vmstats:collect/1` takes a single atom or a list of atoms, which have to map to functions defined and exported in the `katja_vmstats_metrics` module. Every time this function is called, the specified metrics will be collected.
 
+## Resources
+
+* [Generated EDoc](http://katja_vmstats.nifoc.pw/0.1/) ([All Versions](http://katja_vmstats.nifoc.pw))
+
 ## Related Projects
 
 * [Katja](https://github.com/nifoc/katja) - A simple Riemann client written in Erlang
