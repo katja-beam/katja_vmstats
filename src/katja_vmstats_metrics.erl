@@ -17,6 +17,7 @@
 
 % API
 -export([
+  all_message_queues/0,
   error_logger_message_queue/0,
   ets_count/0,
   ets_limit/0,
@@ -28,6 +29,7 @@
   memory_processes/0,
   memory_system/0,
   memory_total/0,
+  message_queue/1,
   port_count/0,
   port_limit/0,
   port_utilization/0,
@@ -39,12 +41,19 @@
 
 % API
 
+% @doc Returns the (summed) size of all message queues at the local node.
+-spec all_message_queues() -> non_neg_integer().
+all_message_queues() ->
+  Processes = processes(),
+  lists:foldr(fun(Pid, Acc) ->
+    Size = message_queue(Pid),
+    Size + Acc
+  end, 0, Processes).
+
 % @doc Returns the size of the `error_logger' message queue at the local node.
 -spec error_logger_message_queue() -> non_neg_integer().
 error_logger_message_queue() ->
-  ErrorLogger = whereis(error_logger),
-  {message_queue_len, Size} = process_info(ErrorLogger, message_queue_len),
-  Size.
+  message_queue(error_logger).
 
 % @doc Returns the number of ETS tables currently existing at the local node.
 -spec ets_count() -> pos_integer().
@@ -99,6 +108,17 @@ memory_system() ->
 -spec memory_total() -> pos_integer().
 memory_total() ->
   erlang:memory(total).
+
+% @doc Returns the size of the message queue of the process identified by `Pid'.
+-spec message_queue(atom() | pid()) -> non_neg_integer().
+message_queue(Name) when is_atom(Name) ->
+  Pid = whereis(Name),
+  message_queue(Pid);
+message_queue(Pid) ->
+  case process_info(Pid, message_queue_len) of
+    {message_queue_len, Size} -> Size;
+    _ -> 0
+  end.
 
 % @doc Returns the number of ports currently existing at the local node.
 -spec port_count() -> pos_integer().
