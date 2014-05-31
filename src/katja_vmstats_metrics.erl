@@ -54,7 +54,11 @@ ets_count() ->
 % @doc Returns the maximum number of ETS tables allowed.
 -spec ets_limit() -> pos_integer().
 ets_limit() ->
-  erlang:system_info(ets_limit).
+  try erlang:system_info(ets_limit) of
+    Limit -> Limit
+  catch
+    error:badarg -> r16_ets_limit()
+  end.
 
 % @doc Returns the ETS table utilization (number between 0 and 1) at the local node.
 -spec ets_utilization() -> float().
@@ -130,3 +134,12 @@ process_utilization() ->
 -spec run_queue() -> non_neg_integer().
 run_queue() ->
   erlang:statistics(run_queue).
+
+% Private
+
+-spec r16_ets_limit() -> pos_integer().
+r16_ets_limit() ->
+  case os:getenv("ERL_MAX_ETS_TABLES") of
+    false -> 1400;
+    Limit -> list_to_integer(Limit)
+  end.
