@@ -18,6 +18,9 @@
 % API
 -export([
   error_logger_message_queue/0,
+  ets_count/0,
+  ets_limit/0,
+  ets_utilization/0,
   loaded_modules/0,
   memory_atoms/0,
   memory_binaries/0,
@@ -42,6 +45,21 @@ error_logger_message_queue() ->
   ErrorLogger = whereis(error_logger),
   {message_queue_len, Size} = process_info(ErrorLogger, message_queue_len),
   Size.
+
+% @doc Returns the number of ETS tables currently existing at the local node.
+-spec ets_count() -> pos_integer().
+ets_count() ->
+  length(ets:all()).
+
+% @doc Returns the maximum number of ETS tables allowed.
+-spec ets_limit() -> pos_integer().
+ets_limit() ->
+  erlang:system_info(ets_limit).
+
+% @doc Returns the ETS table utilization (number between 0 and 1) at the local node.
+-spec ets_utilization() -> float().
+ets_utilization() ->
+  ets_count() / ets_limit().
 
 % @doc Returns the number of currently loaded modules at the local node.
 -spec loaded_modules() -> pos_integer().

@@ -15,6 +15,15 @@
 error_logger_message_queue_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:error_logger_message_queue()).
 
+ets_count_test() ->
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:ets_count()).
+
+ets_limit_test() ->
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:ets_limit()).
+
+ets_utilization_test() ->
+  ?assertMatch(C when is_float(C), katja_vmstats_metrics:ets_utilization()).
+
 loaded_modules_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:loaded_modules()).
 
