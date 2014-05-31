@@ -52,13 +52,13 @@ end_per_suite(_Config) ->
 
 timer_events(_Config) ->
   ok = timer:sleep(2000), % Wait for two seconds, so that the timer can actually sent stuff
-  ProcessLimit = erlang:system_info(process_limit),
+  ProcessLimit = katja_vmstats_metrics:process_limit(),
   {ok, [ProcessEvent]} = katja:query_event([{service, "katja_vmstats process_limit"}]),
   {metric, ProcessLimit} = lists:keyfind(metric, 1, ProcessEvent).
 
 manual_events(_Config) ->
-  EtsCount = length(ets:all()),
-  EtsLimit = erlang:system_info(ets_limit),
+  EtsCount = katja_vmstats_metrics:ets_count(),
+  EtsLimit = katja_vmstats_metrics:ets_limit(),
   ok = katja_vmstats:collect(ets_count),
   ok = katja_vmstats:collect([ets_limit]),
   {ok, [EtsCountEvent]} = katja:query_event([{service, "katja_vmstats ets_count"}]),
