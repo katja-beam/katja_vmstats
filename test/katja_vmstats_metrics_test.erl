@@ -69,5 +69,11 @@ process_limit_test() ->
 process_utilization_test() ->
   ?assertMatch(C when is_float(C), katja_vmstats_metrics:process_utilization()).
 
+reductions_last_call_test() ->
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:reductions_last_call()).
+
+reductions_total_test() ->
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:reductions_total()).
+
 run_queue_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:run_queue()).

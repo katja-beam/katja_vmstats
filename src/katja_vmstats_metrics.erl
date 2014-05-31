@@ -36,6 +36,8 @@
   process_count/0,
   process_limit/0,
   process_utilization/0,
+  reductions_last_call/0,
+  reductions_total/0,
   run_queue/0
 ]).
 
@@ -149,6 +151,22 @@ process_limit() ->
 -spec process_utilization() -> float().
 process_utilization() ->
   process_count() / process_limit().
+
+% @doc Returns the number of reductions (minus reductions performed in current time slices
+%      of currently scheduled processes) performed since the last call to this function.<br />
+%      Using this method and {@link reductions_total/0} at the same time will cause weird/wrong results.
+-spec reductions_last_call() -> pos_integer().
+reductions_last_call() ->
+  {_Total, LastCall} = erlang:statistics(reductions),
+  LastCall.
+
+% @doc Returns the total number of reductions (minus reductions performed in current time slices
+%      of currently scheduled processes) performed at he local node.<br />
+%      Using this method and {@link reductions_last_call/0} at the same time will cause weird/wrong results.
+-spec reductions_total() -> pos_integer().
+reductions_total() ->
+  {Total, _LastCall} = erlang:statistics(reductions),
+  Total.
 
 % @doc Returns the total length of the run queues, that is, the number of processes that are ready to run on all available run queues.
 -spec run_queue() -> non_neg_integer().
