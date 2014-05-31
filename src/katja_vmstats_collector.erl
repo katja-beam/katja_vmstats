@@ -17,7 +17,7 @@
 -behaviour(gen_server).
 
 -define(DEFAULT_SERVICE, "katja_vmstats").
--define(DEFAULT_METRICS, [
+-define(DEFAULT_COLLECTOR, [
   [
     {interval, 1000},
     {metrics, [
@@ -86,7 +86,7 @@ collect(Metrics) ->
 % @hidden
 init([]) ->
   Service = application:get_env(katja_vmstats, service, ?DEFAULT_SERVICE),
-  MetricsIntervals = application:get_env(katja_vmstats, metrics, ?DEFAULT_METRICS),
+  MetricsIntervals = application:get_env(katja_vmstats, collector, ?DEFAULT_COLLECTOR),
   TRefs = lists:map(fun(MetricsInterval) ->
     {interval, Interval} = lists:keyfind(interval, 1, MetricsInterval),
     {metrics, Metrics} = lists:keyfind(metrics, 1, MetricsInterval),
