@@ -17,7 +17,7 @@ This is alpha software. Things might still change in ways that break everything.
 ].
 ```
 
-**service**: Value of the `service` field of events
+**service**: Base value of the `service` field of events
 
 ## Related Projects
 

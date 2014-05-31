@@ -133,9 +133,9 @@ code_change(_OldVsn, State, _Extra) ->
 create_events(Service, Metrics) ->
   Timestamp = current_timestamp(),
   Events = lists:map(fun(Metric) ->
-    MetricTag = atom_to_list(Metric),
+    MetricService = atom_to_list(Metric),
     MetricValue = katja_vmstats_metrics:Metric(),
-    [{service, Service}, {time, Timestamp}, {tags, [MetricTag]}, {metric, MetricValue}]
+    [{service, [Service, " ", MetricService]}, {time, Timestamp}, {tags, ["katja_vmstats"]}, {metric, MetricValue}]
   end, Metrics),
   {ok, Events}.
 
