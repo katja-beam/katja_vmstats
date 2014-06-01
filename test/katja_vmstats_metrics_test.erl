@@ -27,6 +27,18 @@ ets_limit_test() ->
 ets_utilization_test() ->
   ?assertMatch(C when is_float(C), katja_vmstats_metrics:ets_utilization()).
 
+exact_reductions_last_call_test() ->
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:exact_reductions_last_call()).
+
+exact_reductions_total_test() ->
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:exact_reductions_total()).
+
+garbage_collection_runs_test() ->
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:garbage_collection_runs()).
+
+garbage_collection_words_reclaimed_test() ->
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:garbage_collection_words_reclaimed()).
+
 loaded_modules_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:loaded_modules()).
 

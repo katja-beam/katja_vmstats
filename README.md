@@ -41,7 +41,7 @@ This is alpha software. Things might still change in ways that break everything.
 ].
 ```
 
-**service**: Base value of the `service` field of events
+**service**: Base value for the `service` field of events
 
 **collector**: A list of metrics that will be collected in the given interval(s)
 
@@ -55,7 +55,9 @@ A list of all available, collectable metrics can be found in the `katja_vmstats_
 
 ```erlang
 ok = katja_vmstats:collect(ets_count),
-ok = katja_vmstats:collect([ets_limit, ets_utilization]).
+ok = katja_vmstats:collect([ets_limit, ets_utilization]),
+ok = katja_vmstats:collect({"katja_vmstats_collector_message_queue", message_queue, [katja_vmstats_collector]}),
+ok = katja_vmstats:collect({"process_limit", erlang, system_info, [process_limit]}).
 ```
 
 `katja_vmstats:collect/1` takes a single `katja_vmstats:metric()` or a list of `katja_vmstats:metric()`. The following "formats" are supported:

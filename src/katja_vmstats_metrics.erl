@@ -22,6 +22,10 @@
   ets_count/0,
   ets_limit/0,
   ets_utilization/0,
+  exact_reductions_last_call/0,
+  exact_reductions_total/0,
+  garbage_collection_runs/0,
+  garbage_collection_words_reclaimed/0,
   loaded_modules/0,
   memory_atoms/0,
   memory_binaries/0,
@@ -62,7 +66,8 @@ error_logger_message_queue() ->
 ets_count() ->
   length(ets:all()).
 
-% @doc Returns the maximum number of ETS tables allowed.
+% @doc Returns the maximum number of ETS tables allowed.<br />
+%      On older R16 releases `ets_limit' falls back to reading the `ERL_MAX_ETS_TABLES' environment variable or defaults to 1400.
 -spec ets_limit() -> pos_integer().
 ets_limit() ->
   try erlang:system_info(ets_limit) of
@@ -75,6 +80,34 @@ ets_limit() ->
 -spec ets_utilization() -> float().
 ets_utilization() ->
   ets_count() / ets_limit().
+
+% @doc Returns the exact number of reductions performed since the last call to this function.<br />
+%      Using this method and {@link exact_reductions_total/0} at the same time will cause weird/wrong results.<br />
+%      This method is more expensive than {@link reductions_last_call/0}.
+-spec exact_reductions_last_call() -> pos_integer().
+exact_reductions_last_call() ->
+  {_Total, LastCall} = erlang:statistics(exact_reductions),
+  LastCall.
+
+% @doc Returns the exact total number of reductions performed at he local node.<br />
+%      Using this method and {@link exact_reductions_last_call/0} at the same time will cause weird/wrong results.<br />
+%      This method is more expensive than {@link reductions_total/0}.
+-spec exact_reductions_total() -> pos_integer().
+exact_reductions_total() ->
+  {Total, _LastCall} = erlang:statistics(exact_reductions),
+  Total.
+
+% @doc Returns the total number of garbage collector runs.
+-spec garbage_collection_runs() -> non_neg_integer().
+garbage_collection_runs() ->
+  {Runs, _WordsReclaimed, 0} = erlang:statistics(garbage_collection),
+  Runs.
+
+% @doc Returns the total number of words reclaimed by the garbage collector.
+-spec garbage_collection_words_reclaimed() -> non_neg_integer().
+garbage_collection_words_reclaimed() ->
+  {_Runs, WordsReclaimed, 0} = erlang:statistics(garbage_collection),
+  WordsReclaimed.
 
 % @doc Returns the number of currently loaded modules at the local node.
 -spec loaded_modules() -> pos_integer().
@@ -112,11 +145,12 @@ memory_total() ->
   erlang:memory(total).
 
 % @doc Returns the size of the message queue of the process identified by `Pid'.
+%      If `Pid' is an `atom()', it will assume that it's the name of a registered process.
 -spec message_queue(atom() | pid()) -> non_neg_integer().
-message_queue(Name) when is_atom(Name) ->
-  Pid = whereis(Name),
-  message_queue(Pid);
-message_queue(Pid) ->
+message_queue(Pid) when is_atom(Pid), Pid =/= undefined ->
+  Pid2 = whereis(Pid),
+  message_queue(Pid2);
+message_queue(Pid) when is_pid(Pid) ->
   case process_info(Pid, message_queue_len) of
     {message_queue_len, Size} -> Size;
     _ -> 0
