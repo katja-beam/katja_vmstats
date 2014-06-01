@@ -15,6 +15,9 @@
 all_message_queues_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:all_message_queues()).
 
+context_switches_test() ->
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:context_switches()).
+
 error_logger_message_queue_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:error_logger_message_queue()).
 
@@ -39,6 +42,15 @@ garbage_collection_runs_test() ->
 garbage_collection_words_reclaimed_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:garbage_collection_words_reclaimed()).
 
+io_in_test() ->
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:io_in()).
+
+io_out_test() ->
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:io_out()).
+
+links_test() ->
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:links(error_logger)).
+
 loaded_modules_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:loaded_modules()).
 
@@ -51,6 +63,9 @@ memory_binaries_test() ->
 memory_ets_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:memory_ets()).
 
+memory_process_test() ->
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:memory_process(error_logger)).
+
 memory_processes_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:memory_processes()).
 
@@ -62,6 +77,9 @@ memory_total_test() ->
   SystemMemory = katja_vmstats_metrics:memory_system(),
   ?assertMatch(C when C > 0, TotalMemory),
   ?assert(TotalMemory > SystemMemory).
+
+monitors_test() ->
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:monitors(error_logger)).
 
 port_count_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:port_count()).

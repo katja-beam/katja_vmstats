@@ -18,6 +18,7 @@
 % API
 -export([
   all_message_queues/0,
+  context_switches/0,
   error_logger_message_queue/0,
   ets_count/0,
   ets_limit/0,
@@ -26,14 +27,19 @@
   exact_reductions_total/0,
   garbage_collection_runs/0,
   garbage_collection_words_reclaimed/0,
+  io_in/0,
+  io_out/0,
+  links/1,
   loaded_modules/0,
   memory_atoms/0,
   memory_binaries/0,
   memory_ets/0,
+  memory_process/1,
   memory_processes/0,
   memory_system/0,
   memory_total/0,
   message_queue/1,
+  monitors/1,
   port_count/0,
   port_limit/0,
   port_utilization/0,
@@ -55,6 +61,12 @@ all_message_queues() ->
     Size = message_queue(Pid),
     Size + Acc
   end, 0, Processes).
+
+% @doc Returns the total number of context switches since the system started.
+-spec context_switches() -> non_neg_integer().
+context_switches() ->
+  {ContextSwitches, 0} = erlang:statistics(context_switches),
+  ContextSwitches.
 
 % @doc Returns the size of the `error_logger' message queue at the local node.
 -spec error_logger_message_queue() -> non_neg_integer().
@@ -109,6 +121,24 @@ garbage_collection_words_reclaimed() ->
   {_Runs, WordsReclaimed, 0} = erlang:statistics(garbage_collection),
   WordsReclaimed.
 
+% @doc Returns the total number of bytes received through ports.
+-spec io_in() -> non_neg_integer().
+io_in() ->
+  {{input, Input}, {output, _Output}} = erlang:statistics(io),
+  Input.
+
+% @doc Returns the total number of bytes output to ports.
+-spec io_out() -> non_neg_integer().
+io_out() ->
+  {{input, _Input}, {output, Output}} = erlang:statistics(io),
+  Output.
+
+% @doc Returns the number of processes or ports to which the process has a link.
+%      If `Pid' is an `atom()', it will assume that it's the name of a registered process.
+-spec links(atom() | pid()) -> non_neg_integer().
+links(Pid) ->
+  process_info_field(Pid, links).
+
 % @doc Returns the number of currently loaded modules at the local node.
 -spec loaded_modules() -> pos_integer().
 loaded_modules() ->
@@ -129,6 +159,12 @@ memory_binaries() ->
 memory_ets() ->
   erlang:memory(ets).
 
+% @doc Size of the process in bytes. This includes call stack, heap and internal structures.
+%      If `Pid' is an `atom()', it will assume that it's the name of a registered process.
+-spec memory_process(atom() | pid()) -> non_neg_integer().
+memory_process(Pid) ->
+  process_info_field(Pid, memory).
+
 % @doc The total amount of memory currently used by the Erlang processes.
 -spec memory_processes() -> pos_integer().
 memory_processes() ->
@@ -147,14 +183,14 @@ memory_total() ->
 % @doc Returns the size of the message queue of the process identified by `Pid'.
 %      If `Pid' is an `atom()', it will assume that it's the name of a registered process.
 -spec message_queue(atom() | pid()) -> non_neg_integer().
-message_queue(Pid) when is_atom(Pid), Pid =/= undefined ->
-  Pid2 = whereis(Pid),
-  message_queue(Pid2);
-message_queue(Pid) when is_pid(Pid) ->
-  case process_info(Pid, message_queue_len) of
-    {message_queue_len, Size} -> Size;
-    _ -> 0
-  end.
+message_queue(Pid) ->
+  process_info_field(Pid, message_queue_len).
+
+% @doc Returns the number of monitors that are active for the process.
+%      If `Pid' is an `atom()', it will assume that it's the name of a registered process.
+-spec monitors(atom() | pid()) -> non_neg_integer().
+monitors(Pid) ->
+  process_info_field(Pid, monitors).
 
 % @doc Returns the number of ports currently existing at the local node.
 -spec port_count() -> pos_integer().
@@ -208,6 +244,17 @@ run_queue() ->
   erlang:statistics(run_queue).
 
 % Private
+
+-spec process_info_field(pid() | atom(), atom()) -> non_neg_integer().
+process_info_field(Pid, Field) when is_atom(Pid), Pid =/= undefined ->
+  Pid2 = whereis(Pid),
+  process_info_field(Pid2, Field);
+process_info_field(Pid, Field) when is_pid(Pid) ->
+  case process_info(Pid, Field) of
+    {Field, Size} when is_number(Size) -> Size;
+    {Field, List} when is_list(List) -> length(List);
+    _ -> 0
+  end.
 
 -spec r16_ets_limit() -> pos_integer().
 r16_ets_limit() ->
