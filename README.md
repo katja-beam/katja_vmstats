@@ -58,7 +58,11 @@ ok = katja_vmstats:collect(ets_count),
 ok = katja_vmstats:collect([ets_limit, ets_utilization]).
 ```
 
-`katja_vmstats:collect/1` takes a single atom or a list of atoms, which have to map to functions defined and exported in the `katja_vmstats_metrics` module. Every time this function is called, the specified metrics will be collected.
+`katja_vmstats:collect/1` takes a single `katja_vmstats:metric()` or a list of `katja_vmstats:metric()`. The following "formats" are supported:
+
+* `atom()`: A function defined and exported in the `katja_vmstats_metrics` module.
+* `{iolist(), atom(), [any()]}`: A function defined and exported in the `katja_vmstats_metrics` module. The first tuple field is the name of the metric, the second and the third field are the *FA* part of *MFA*.
+* `{iolist(), module(), atom(), [any()]}`: Any function in any module that returns a `number()`. The first tuple field is the name of the metric, the following fields are *MFA*.
 
 ## Resources
 

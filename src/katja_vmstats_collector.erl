@@ -16,6 +16,10 @@
 -module(katja_vmstats_collector).
 -behaviour(gen_server).
 
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -define(DEFAULT_SERVICE, "katja_vmstats").
 -define(DEFAULT_COLLECTOR, [
   [
@@ -75,8 +79,15 @@ stop() ->
   gen_server:call(?MODULE, terminate).
 
 % @doc Collects the specified metrics and sends them to Riemann.
--spec collect(atom() | [atom()]) -> ok.
-collect(Metric) when is_atom(Metric) ->
+%      <ul>
+%        <li>`atom()': A function defined and exported in the {@link katja_vmstats_metrics} module.</li>
+%        <li>`{iolist(), atom(), [any()]}': A function defined and exported in the {@link katja_vmstats_metrics} module.
+%            The first tuple field is the name of the metric, the second and the third field are the <em>FA</em> part of <em>MFA</em>.</li>
+%        <li>`{iolist(), module(), atom(), [any()]}': Any function in any module that returns a `number()'.
+%            The first tuple field is the name of the metric, the following fields are <em>MFA</em>.</li>
+%      </ul>
+-spec collect(katja_vmstats:metric() | [katja_vmstats:metric()]) -> ok.
+collect(Metric) when is_atom(Metric); is_tuple(Metric) ->
   collect([Metric]);
 collect(Metrics) ->
   gen_server:cast(?MODULE, {collect, Metrics}).
@@ -133,9 +144,9 @@ code_change(_OldVsn, State, _Extra) ->
 create_events(Service, Metrics) ->
   Timestamp = current_timestamp(),
   Events = lists:map(fun(Metric) ->
-    MetricService = atom_to_list(Metric),
-    MetricValue = katja_vmstats_metrics:Metric(),
-    [{service, [Service, " ", MetricService]}, {time, Timestamp}, {tags, ["katja_vmstats"]}, {metric, MetricValue}]
+    MetricService = get_metric_service(Service, Metric),
+    MetricValue = get_metric_value(Metric),
+    [{service, MetricService}, {time, Timestamp}, {tags, ["katja_vmstats"]}, {metric, MetricValue}]
   end, Metrics),
   {ok, Events}.
 
@@ -143,3 +154,36 @@ create_events(Service, Metrics) ->
 current_timestamp() ->
   {MegaSecs, Secs, _MicroSecs} = os:timestamp(),
   MegaSecs * 1000000 + Secs.
+
+-spec get_metric_service(iolist(), katja_vmstats:metric()) -> iolist().
+get_metric_service(BaseService, Metric) when is_atom(Metric) ->
+  Metric2 = atom_to_list(Metric),
+  [BaseService, " ", Metric2];
+get_metric_service(BaseService, {Service, _Fun, _Args}) ->
+  [BaseService, " ", Service];
+get_metric_service(BaseService, {Service, _Mod, _Fun, _Args}) ->
+  [BaseService, " ", Service].
+
+-spec get_metric_value(katja_vmstats:metric()) -> number().
+get_metric_value(Metric) when is_atom(Metric) ->
+  katja_vmstats_metrics:Metric();
+get_metric_value({_Service, Fun, Args}) ->
+  apply(katja_vmstats_metrics, Fun, Args);
+get_metric_value({_Service, Mod, Fun, Args}) ->
+  apply(Mod, Fun, Args).
+
+% Tests (private functions)
+
+-ifdef(TEST).
+get_metric_service_test() ->
+  ?assertEqual(["katja_vmstats", " ", "test"], get_metric_service("katja_vmstats", test)),
+  ?assertEqual(["katja_vmstats", " ", "friday"], get_metric_service("katja_vmstats", {"friday", funfunfun, []})),
+  ?assertEqual(["katja_vmstats", " ", "friday"], get_metric_service("katja_vmstats", {"friday", rebecca, funfunfun, []})).
+
+get_metric_value_test() ->
+  ProcessCount = erlang:system_info(process_count),
+  ?assertEqual(ProcessCount, get_metric_value(process_count)),
+  ?assertEqual(ProcessCount, get_metric_value({"process_count", process_count, []})),
+  ?assertEqual(ProcessCount, get_metric_value({"process_count", katja_vmstats_metrics, process_count, []})),
+  ?assertEqual(ProcessCount, get_metric_value({"process_count", erlang, system_info, [process_count]})).
+-endif.

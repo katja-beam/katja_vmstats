@@ -17,6 +17,12 @@
 
 -module(katja_vmstats).
 
+-type metric() :: atom() | {iolist(), atom(), [any()]} | {iolist(), module(), atom(), [any()]}.
+
+-export_type([
+  metric/0
+]).
+
 % API
 -export([
   collect/1
@@ -25,6 +31,6 @@
 % API
 
 % @doc Collects the specified metrics and sends them to Riemann. Delegates to {@link katja_vmstats_collector:collect/1}.
--spec collect(atom() | [atom()]) -> ok.
+-spec collect(metric() | [metric()]) -> ok.
 collect(Metrics) ->
   katja_vmstats_collector:collect(Metrics).

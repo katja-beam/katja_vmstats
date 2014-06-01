@@ -59,9 +59,13 @@ timer_events(_Config) ->
 manual_events(_Config) ->
   EtsCount = katja_vmstats_metrics:ets_count(),
   EtsLimit = katja_vmstats_metrics:ets_limit(),
+  ProcessLimit = katja_vmstats_metrics:process_limit(),
   ok = katja_vmstats:collect(ets_count),
   ok = katja_vmstats:collect([ets_limit]),
+  ok = katja_vmstats:collect([{"tuple_process_limit", erlang, system_info, [process_limit]}]),
   {ok, [EtsCountEvent]} = katja:query_event([{service, "katja_vmstats ets_count"}]),
   {metric, EtsCount} = lists:keyfind(metric, 1, EtsCountEvent),
   {ok, [EtsLimitEvent]} = katja:query_event([{service, "katja_vmstats ets_limit"}]),
-  {metric, EtsLimit} = lists:keyfind(metric, 1, EtsLimitEvent).
+  {metric, EtsLimit} = lists:keyfind(metric, 1, EtsLimitEvent),
+  {ok, [ProcessLimitEvent]} = katja:query_event([{service, "katja_vmstats tuple_process_limit"}]),
+  {metric, ProcessLimit} = lists:keyfind(metric, 1, ProcessLimitEvent).
