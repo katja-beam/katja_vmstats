@@ -21,6 +21,7 @@
 -endif.
 
 -define(DEFAULT_SERVICE, "katja_vmstats").
+-define(DEFAULT_DELAY_COLLECTION, 0).
 -define(DEFAULT_COLLECTOR, [
   [
     {interval, 1000},
@@ -48,6 +49,8 @@
   service = undefined :: iolist() | undefined,
   trefs = undefined :: [timer:tref()] | undefined
 }).
+
+-type state() :: #collector_state{}.
 
 % API
 -export([
@@ -97,15 +100,17 @@ collect(Metrics) ->
 % @hidden
 init([]) ->
   Service = application:get_env(katja_vmstats, service, ?DEFAULT_SERVICE),
+  DelayCollection = application:get_env(katja_vmstats, delay_collection, ?DEFAULT_DELAY_COLLECTION),
   MetricsIntervals = application:get_env(katja_vmstats, collector, ?DEFAULT_COLLECTOR),
-  TRefs = lists:map(fun(MetricsInterval) ->
-    {interval, Interval} = lists:keyfind(interval, 1, MetricsInterval),
-    {metrics, Metrics} = lists:keyfind(metrics, 1, MetricsInterval),
-    {ok, TRef} = timer:send_interval(Interval, {collect, Metrics}),
-    TRef
-  end, MetricsIntervals),
-  State = #collector_state{service=Service, trefs=TRefs},
-  {ok, State}.
+  State = #collector_state{service=Service, trefs=[]},
+  if
+    DelayCollection == 0 ->
+      State2 = start_intervals(MetricsIntervals, State),
+      {ok, State2};
+    DelayCollection > 0 ->
+      {ok, _TRef} = timer:send_after(DelayCollection, {start_intervals, MetricsIntervals}),
+      {ok, State}
+  end.
 
 % @hidden
 handle_call(terminate, _From, State) ->
@@ -122,6 +127,9 @@ handle_cast(_Msg, State) ->
   {noreply, State}.
 
 % @hidden
+handle_info({start_intervals, MetricsIntervals}, State) ->
+  State2 = start_intervals(MetricsIntervals, State),
+  {noreply, State2};
 handle_info({collect, Metrics}, #collector_state{service=Service}=S) ->
   {ok, Events} = create_events(Service, Metrics),
   ok = katja:send_events(Events),
@@ -139,6 +147,15 @@ code_change(_OldVsn, State, _Extra) ->
   {ok, State}.
 
 % Private
+
+-spec start_intervals([[{atom(), any()}]], state()) -> state().
+start_intervals(MetricsIntervals, State) ->
+  lists:foldr(fun(MetricsInterval, #collector_state{trefs=TRefs}=S) ->
+    {interval, Interval} = lists:keyfind(interval, 1, MetricsInterval),
+    {metrics, Metrics} = lists:keyfind(metrics, 1, MetricsInterval),
+    {ok, TRef} = timer:send_interval(Interval, {collect, Metrics}),
+    S#collector_state{trefs=[TRef | TRefs]}
+  end, State, MetricsIntervals).
 
 -spec create_events(iolist(), [atom()]) -> {ok, [katja:event()]}.
 create_events(Service, Metrics) ->

@@ -15,6 +15,7 @@ This is alpha software. Things might still change in ways that break everything.
 [
   {katja_vmstats, [
     {service, "katja_vmstats"},
+    {delay_collection, 0},
     {collector, [
       [
         {interval, 1000},
@@ -42,6 +43,8 @@ This is alpha software. Things might still change in ways that break everything.
 ```
 
 **service**: Base value for the `service` field of events
+
+**delay_collection**: Delays the initial collection of metrics by the specified amount of milliseconds
 
 **collector**: A list of metrics that will be collected in the given interval(s)
 
