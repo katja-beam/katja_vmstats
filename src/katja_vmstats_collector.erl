@@ -192,6 +192,12 @@ get_metric_value({_Service, Mod, Fun, Args}) ->
 % Tests (private functions)
 
 -ifdef(TEST).
+start_collection_intervals_test() ->
+  State = #collector_state{service="test", trefs=[]},
+  State2 = start_collection_intervals([[{interval, 10000}, {metrics, [process_count]}]], State),
+  ?assertMatch(#collector_state{trefs=L} when length(L) == 1, State2),
+  ?assertEqual(ok, terminate(normal, State2)).
+
 get_metric_service_test() ->
   ?assertEqual(["katja_vmstats", " ", "test"], get_metric_service("katja_vmstats", test)),
   ?assertEqual(["katja_vmstats", " ", "friday"], get_metric_service("katja_vmstats", {"friday", funfunfun, []})),
