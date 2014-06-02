@@ -105,10 +105,10 @@ init([]) ->
   State = #collector_state{service=Service, trefs=[]},
   if
     DelayCollection == 0 ->
-      State2 = start_intervals(MetricsIntervals, State),
+      State2 = start_collection_intervals(MetricsIntervals, State),
       {ok, State2};
     DelayCollection > 0 ->
-      {ok, _TRef} = timer:send_after(DelayCollection, {start_intervals, MetricsIntervals}),
+      {ok, _TRef} = timer:send_after(DelayCollection, {start_collection_intervals, MetricsIntervals}),
       {ok, State}
   end.
 
@@ -127,8 +127,8 @@ handle_cast(_Msg, State) ->
   {noreply, State}.
 
 % @hidden
-handle_info({start_intervals, MetricsIntervals}, State) ->
-  State2 = start_intervals(MetricsIntervals, State),
+handle_info({start_collection_intervals, MetricsIntervals}, State) ->
+  State2 = start_collection_intervals(MetricsIntervals, State),
   {noreply, State2};
 handle_info({collect, Metrics}, #collector_state{service=Service}=S) ->
   {ok, Events} = create_events(Service, Metrics),
@@ -148,8 +148,8 @@ code_change(_OldVsn, State, _Extra) ->
 
 % Private
 
--spec start_intervals([[{atom(), any()}]], state()) -> state().
-start_intervals(MetricsIntervals, State) ->
+-spec start_collection_intervals([[{atom(), any()}]], state()) -> state().
+start_collection_intervals(MetricsIntervals, State) ->
   lists:foldr(fun(MetricsInterval, #collector_state{trefs=TRefs}=S) ->
     {interval, Interval} = lists:keyfind(interval, 1, MetricsInterval),
     {metrics, Metrics} = lists:keyfind(metrics, 1, MetricsInterval),
