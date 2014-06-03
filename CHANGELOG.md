@@ -2,6 +2,8 @@
 
 ## 0.2
 
+[Documentation](http://katja_vmstats.nifoc.pw/0.2/)
+
 * New metrics: `all_message_queues/0`, `context_switches/0`, `exact_reductions_last_call/0`, `exact_reductions_total/0`, `garbage_collection_runs/0`, `garbage_collection_words_reclaimed/0`, `io_in/0`, `io_out/0`, `links/1`, `memory_process/1`, `message_queue/1`, `monitors/1`, `reductions_last_call/0`, `reductions_total/0`
 * Arbitrary functions (that return `number()`) can be used for metric collection (see: `katja_vmstats:metric()` and README)
 * Add the `delay_collection` configuration option, which allows the initial metrics collection to be delayed by the specified amount of milliseconds
