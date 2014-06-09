@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3
+
+* Update Katja dependency to [v0.4](https://github.com/nifoc/katja/tree/v0.4)
+
 ## 0.2
 
 [Documentation](http://katja_vmstats.nifoc.pw/0.2/)
