@@ -3,6 +3,7 @@
 ## 0.3
 
 * Update Katja dependency to [v0.4](https://github.com/nifoc/katja/tree/v0.4)
+* Add `katja_vmstats:start/0` to start the Katja VM Stats application and all of its dependencies
 
 ## 0.2
 

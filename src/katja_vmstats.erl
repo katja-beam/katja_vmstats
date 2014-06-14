@@ -25,10 +25,18 @@
 
 % API
 -export([
+  start/0,
   collect/1
 ]).
 
 % API
+
+% @doc Starts the Katja VM Stats application and all of its dependencies. This is really only meant for usage inside the console.
+-spec start() -> ok.
+start() ->
+  ok = application:start(katja),
+  ok = application:start(katja_vmstats),
+  ok.
 
 % @doc Collects the specified metrics and sends them to Riemann. Delegates to {@link katja_vmstats_collector:collect/1}.
 -spec collect(metric() | [metric()]) -> ok.
