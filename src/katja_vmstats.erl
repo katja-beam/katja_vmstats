@@ -17,6 +17,8 @@
 
 -module(katja_vmstats).
 
+% Types
+
 -type metric() :: atom() | {iolist(), atom(), [any()]} | {iolist(), module(), atom(), [any()]}.
 
 -export_type([

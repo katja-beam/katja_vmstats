@@ -50,6 +50,8 @@
   trefs = undefined :: [timer:tref()] | undefined
 }).
 
+% Types
+
 -type state() :: #collector_state{}.
 
 % API
