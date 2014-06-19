@@ -71,7 +71,7 @@ ok = katja_vmstats:collect({"process_limit", erlang, system_info, [process_limit
 
 ## Resources
 
-* [Generated EDoc](http://katja_vmstats.nifoc.pw/0.2/) ([All Versions](http://katja_vmstats.nifoc.pw))
+* [Generated EDoc](http://katja_vmstats.nifoc.pw/0.3/) ([All Versions](http://katja_vmstats.nifoc.pw))
 
 ## Related Projects
 

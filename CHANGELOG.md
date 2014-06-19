@@ -2,6 +2,8 @@
 
 ## 0.3
 
+[Documentation](http://katja_vmstats.nifoc.pw/0.3/)
+
 * Update Katja dependency to [v0.4](https://github.com/nifoc/katja/tree/v0.4)
 * Add `katja_vmstats:start/0` to start the Katja VM Stats application and all of its dependencies
 * New metrics: `heap_size/1`, `reductions_process/1`, `stack_size/1`
