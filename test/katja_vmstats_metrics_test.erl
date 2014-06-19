@@ -42,6 +42,9 @@ garbage_collection_runs_test() ->
 garbage_collection_words_reclaimed_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:garbage_collection_words_reclaimed()).
 
+heap_size_test() ->
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:heap_size(error_logger)).
+
 io_in_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:io_in()).
 
@@ -102,8 +105,14 @@ process_utilization_test() ->
 reductions_last_call_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:reductions_last_call()).
 
+reductions_process_test() ->
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:reductions_process(error_logger)).
+
 reductions_total_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:reductions_total()).
 
 run_queue_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:run_queue()).
+
+stack_size_test() ->
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:stack_size(error_logger)).

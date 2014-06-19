@@ -27,6 +27,7 @@
   exact_reductions_total/0,
   garbage_collection_runs/0,
   garbage_collection_words_reclaimed/0,
+  heap_size/1,
   io_in/0,
   io_out/0,
   links/1,
@@ -47,8 +48,10 @@
   process_limit/0,
   process_utilization/0,
   reductions_last_call/0,
+  reductions_process/1,
   reductions_total/0,
-  run_queue/0
+  run_queue/0,
+  stack_size/1
 ]).
 
 % API
@@ -120,6 +123,13 @@ garbage_collection_runs() ->
 garbage_collection_words_reclaimed() ->
   {_Runs, WordsReclaimed, 0} = erlang:statistics(garbage_collection),
   WordsReclaimed.
+
+% @doc Returns the size in words of youngest heap generation of the process.
+%      This generation currently include the stack of the process.<br />
+%      If `Pid' is an `atom()', it will assume that it's the name of a registered process.
+-spec heap_size(atom() | pid()) -> pos_integer().
+heap_size(Pid) ->
+  process_info_field(Pid, heap_size).
 
 % @doc Returns the total number of bytes received through ports.
 -spec io_in() -> non_neg_integer().
@@ -230,6 +240,12 @@ reductions_last_call() ->
   {_Total, LastCall} = erlang:statistics(reductions),
   LastCall.
 
+% @doc Returns the number of reductions executed by the process.<br />
+%      If `Pid' is an `atom()', it will assume that it's the name of a registered process.
+-spec reductions_process(atom() | pid()) -> pos_integer().
+reductions_process(Pid) ->
+  process_info_field(Pid, reductions).
+
 % @doc Returns the total number of reductions (minus reductions performed in current time slices
 %      of currently scheduled processes) performed at he local node.<br />
 %      Using this method and {@link reductions_last_call/0} at the same time will cause weird/wrong results.
@@ -243,6 +259,12 @@ reductions_total() ->
 run_queue() ->
   erlang:statistics(run_queue).
 
+% @doc Return the stack size of the process in words.<br />
+%      If `Pid' is an `atom()', it will assume that it's the name of a registered process.
+-spec stack_size(atom() | pid()) -> pos_integer().
+stack_size(Pid) ->
+  process_info_field(Pid, stack_size).
+
 % Private
 
 -spec process_info_field(pid() | atom(), atom()) -> non_neg_integer().
@@ -251,7 +273,7 @@ process_info_field(Pid, Field) when is_atom(Pid), Pid =/= undefined ->
   process_info_field(Pid2, Field);
 process_info_field(Pid, Field) when is_pid(Pid) ->
   case process_info(Pid, Field) of
-    {Field, Size} when is_number(Size) -> Size;
+    {Field, Num} when is_number(Num) -> Num;
     {Field, List} when is_list(List) -> length(List);
     _ -> 0
   end.
