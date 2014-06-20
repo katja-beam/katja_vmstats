@@ -144,12 +144,12 @@ handle_call({start_timer, Name, MetricsIntervals}, _From, State) ->
   State2 = start_collection_intervals(Name, MetricsIntervals, State),
   {reply, ok, State2};
 handle_call({stop_timer, all}, _From, #collector_state{timer=Timer}=S) ->
-  _ = [{ok, cancel} = timer:cancel(TRef) || {_Name, _Interval, TRef} <- Timer],
+  ok = stop_collection_intervals(Timer),
   S2 = S#collector_state{timer=[]},
   {reply, ok, S2};
 handle_call({stop_timer, Name}, _From, #collector_state{timer=Timer}=S) ->
   {TimerStop, TimerNext} = lists:splitwith(fun({TName, _Interval, _Tref}) -> Name =:= TName end, Timer),
-  _ = [{ok, cancel} = timer:cancel(TRef) || {_Name, _Interval, TRef} <- TimerStop],
+  ok = stop_collection_intervals(TimerStop),
   S2 = S#collector_state{timer=TimerNext},
   {reply, ok, S2};
 handle_call(terminate, _From, State) ->
@@ -178,7 +178,7 @@ handle_info(_Msg, State) ->
 
 % @hidden
 terminate(normal, #collector_state{timer=Timer}) ->
-  _ = [{ok, cancel} = timer:cancel(TRef) || {_Name, _Interval, TRef} <- Timer],
+  ok = stop_collection_intervals(Timer),
   ok.
 
 % @hidden
@@ -195,6 +195,11 @@ start_collection_intervals(Name, MetricsIntervals, State) ->
     {ok, TRef} = timer:send_interval(Interval, {collect, Metrics}),
     S#collector_state{timer=[{Name, Interval, TRef} | Timer]}
   end, State, MetricsIntervals).
+
+-spec stop_collection_intervals([{atom(), pos_integer(), timer:tref()}]) -> ok.
+stop_collection_intervals(Timer) ->
+  _ = [{ok, cancel} = timer:cancel(TRef) || {_Name, _Interval, TRef} <- Timer],
+  ok.
 
 -spec create_events(iolist(), [atom()]) -> {ok, [katja:event()]}.
 create_events(Service, Metrics) ->
