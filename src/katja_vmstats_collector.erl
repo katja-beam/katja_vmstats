@@ -47,7 +47,7 @@
 
 -record(collector_state, {
   service = undefined :: iolist() | undefined,
-  trefs = undefined :: [timer:tref()] | undefined
+  timer = undefined :: [{atom(), pos_integer(), timer:tref()}] | undefined
 }).
 
 % Types
@@ -58,7 +58,10 @@
 -export([
   start_link/0,
   stop/0,
-  collect/1
+  collect/1,
+  get_timer/1,
+  start_timer/2,
+  stop_timer/1
 ]).
 
 % gen_server
@@ -91,11 +94,27 @@ stop() ->
 %        <li>`{iolist(), module(), atom(), [any()]}': Any function in any module that returns a `number()'.
 %            The first tuple field is the name of the metric, the following fields are <em>MFA</em>.</li>
 %      </ul>
--spec collect(katja_vmstats:metric() | [katja_vmstats:metric()]) -> ok.
-collect(Metric) when is_atom(Metric); is_tuple(Metric) ->
-  collect([Metric]);
+-spec collect([katja_vmstats:metric()]) -> ok.
 collect(Metrics) ->
   gen_server:cast(?MODULE, {collect, Metrics}).
+
+% @doc Returns a list of all timers registered under the given `Name'.
+%      Setting `Name' to `all' will return all registered timers.
+-spec get_timer(atom()) -> [{atom(), pos_integer()}].
+get_timer(Name) ->
+  gen_server:call(?MODULE, {get_timer, Name}).
+
+% @doc Registers a new timer under the given `Name'.<br />
+%      `MetricsIntervals' has to be a list like the `collector' configuration option.
+-spec start_timer(atom(), [katja_vmstats:collection()]) -> ok.
+start_timer(Name, MetricsIntervals) ->
+  gen_server:call(?MODULE, {start_timer, Name, MetricsIntervals}).
+
+% @doc Stops all timers registered under the given `Name'.
+%      Setting `Name' to `all' will stop all registered timers.
+-spec stop_timer(atom()) -> ok.
+stop_timer(Name) ->
+  gen_server:call(?MODULE, {stop_timer, Name}).
 
 % gen_server
 
@@ -104,17 +123,35 @@ init([]) ->
   Service = application:get_env(katja_vmstats, service, ?DEFAULT_SERVICE),
   DelayCollection = application:get_env(katja_vmstats, delay_collection, ?DEFAULT_DELAY_COLLECTION),
   MetricsIntervals = application:get_env(katja_vmstats, collector, ?DEFAULT_COLLECTOR),
-  State = #collector_state{service=Service, trefs=[]},
+  State = #collector_state{service=Service, timer=[]},
   if
     DelayCollection == 0 ->
-      State2 = start_collection_intervals(MetricsIntervals, State),
+      State2 = start_collection_intervals(config, MetricsIntervals, State),
       {ok, State2};
     DelayCollection > 0 ->
-      {ok, _TRef} = timer:send_after(DelayCollection, {start_collection_intervals, MetricsIntervals}),
+      {ok, _TRef} = timer:send_after(DelayCollection, {start_collection_intervals, config, MetricsIntervals}),
       {ok, State}
   end.
 
 % @hidden
+handle_call({get_timer, all}, _From, #collector_state{timer=Timer}=S) ->
+  Timer2 = [{TName, Interval} || {TName, Interval, _TRef} <- Timer],
+  {reply, Timer2, S};
+handle_call({get_timer, Name}, _From, #collector_state{timer=Timer}=S) ->
+  Timer2 = [{TName, Interval} || {TName, Interval, _TRef} <- Timer, Name =:= TName],
+  {reply, Timer2, S};
+handle_call({start_timer, Name, MetricsIntervals}, _From, State) ->
+  State2 = start_collection_intervals(Name, MetricsIntervals, State),
+  {reply, ok, State2};
+handle_call({stop_timer, all}, _From, #collector_state{timer=Timer}=S) ->
+  _ = [{ok, cancel} = timer:cancel(TRef) || {_Name, _Interval, TRef} <- Timer],
+  S2 = S#collector_state{timer=[]},
+  {reply, ok, S2};
+handle_call({stop_timer, Name}, _From, #collector_state{timer=Timer}=S) ->
+  {TimerStop, TimerNext} = lists:splitwith(fun({TName, _Interval, _Tref}) -> Name =:= TName end, Timer),
+  _ = [{ok, cancel} = timer:cancel(TRef) || {_Name, _Interval, TRef} <- TimerStop],
+  S2 = S#collector_state{timer=TimerNext},
+  {reply, ok, S2};
 handle_call(terminate, _From, State) ->
   {stop, normal, ok, State};
 handle_call(_Request, _From, State) ->
@@ -129,8 +166,8 @@ handle_cast(_Msg, State) ->
   {noreply, State}.
 
 % @hidden
-handle_info({start_collection_intervals, MetricsIntervals}, State) ->
-  State2 = start_collection_intervals(MetricsIntervals, State),
+handle_info({start_collection_intervals, Name, MetricsIntervals}, State) ->
+  State2 = start_collection_intervals(Name, MetricsIntervals, State),
   {noreply, State2};
 handle_info({collect, Metrics}, #collector_state{service=Service}=S) ->
   {ok, Events} = create_events(Service, Metrics),
@@ -140,8 +177,8 @@ handle_info(_Msg, State) ->
   {noreply, State}.
 
 % @hidden
-terminate(normal, #collector_state{trefs=TRefs}) ->
-  _ = [{ok, cancel} = timer:cancel(TRef) || TRef <- TRefs],
+terminate(normal, #collector_state{timer=Timer}) ->
+  _ = [{ok, cancel} = timer:cancel(TRef) || {_Name, _Interval, TRef} <- Timer],
   ok.
 
 % @hidden
@@ -150,13 +187,13 @@ code_change(_OldVsn, State, _Extra) ->
 
 % Private
 
--spec start_collection_intervals([[{atom(), any()}]], state()) -> state().
-start_collection_intervals(MetricsIntervals, State) ->
-  lists:foldr(fun(MetricsInterval, #collector_state{trefs=TRefs}=S) ->
+-spec start_collection_intervals(atom(), [katja_vmstats:collection()], state()) -> state().
+start_collection_intervals(Name, MetricsIntervals, State) ->
+  lists:foldr(fun(MetricsInterval, #collector_state{timer=Timer}=S) ->
     {interval, Interval} = lists:keyfind(interval, 1, MetricsInterval),
     {metrics, Metrics} = lists:keyfind(metrics, 1, MetricsInterval),
     {ok, TRef} = timer:send_interval(Interval, {collect, Metrics}),
-    S#collector_state{trefs=[TRef | TRefs]}
+    S#collector_state{timer=[{Name, Interval, TRef} | Timer]}
   end, State, MetricsIntervals).
 
 -spec create_events(iolist(), [atom()]) -> {ok, [katja:event()]}.
@@ -195,9 +232,9 @@ get_metric_value({_Service, Mod, Fun, Args}) ->
 
 -ifdef(TEST).
 start_collection_intervals_test() ->
-  State = #collector_state{service="test", trefs=[]},
-  State2 = start_collection_intervals([[{interval, 10000}, {metrics, [process_count]}]], State),
-  ?assertMatch(#collector_state{trefs=L} when length(L) == 1, State2),
+  State = #collector_state{service="test", timer=[]},
+  State2 = start_collection_intervals(test, [[{interval, 10000}, {metrics, [process_count]}]], State),
+  ?assertMatch(#collector_state{timer=L} when length(L) == 1, State2),
   ?assertEqual(ok, terminate(normal, State2)).
 
 get_metric_service_test() ->

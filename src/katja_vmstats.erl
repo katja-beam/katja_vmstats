@@ -20,15 +20,20 @@
 % Types
 
 -type metric() :: atom() | {iolist(), atom(), [any()]} | {iolist(), module(), atom(), [any()]}.
+-type collection() :: [{interval, pos_integer()} | {metrics, metric()}].
 
 -export_type([
-  metric/0
+  metric/0,
+  collection/0
 ]).
 
 % API
 -export([
   start/0,
-  collect/1
+  collect/1,
+  get_timer/1,
+  start_timer/2,
+  stop_timer/1
 ]).
 
 % API
@@ -42,5 +47,24 @@ start() ->
 
 % @doc Collects the specified metrics and sends them to Riemann. Delegates to {@link katja_vmstats_collector:collect/1}.
 -spec collect(metric() | [metric()]) -> ok.
+collect(Metric) when is_atom(Metric); is_tuple(Metric) ->
+  collect([Metric]);
 collect(Metrics) ->
   katja_vmstats_collector:collect(Metrics).
+
+% @doc Returns a list of all timers registered under the given `Name'. Delegates to {@link katja_vmstats_collector:get_timer/1}.
+-spec get_timer(atom()) -> [{atom(), pos_integer()}].
+get_timer(Name) ->
+  katja_vmstats_collector:get_timer(Name).
+
+% @doc Registers a new timer under the given `Name'. Delegates to {@link katja_vmstats_collector:start_timer/2}.
+-spec start_timer(atom(), katja_vmstats:collection() | [katja_vmstats:collection()]) -> ok.
+start_timer(Name, MetricsIntervals) when is_tuple(hd(MetricsIntervals)) ->
+  start_timer(Name, [MetricsIntervals]);
+start_timer(Name, MetricsIntervals) ->
+  katja_vmstats_collector:start_timer(Name, MetricsIntervals).
+
+% @doc Stops all timers registered under the given `Name'. Delegates to {@link katja_vmstats_collector:stop_timer/1}.
+-spec stop_timer(atom()) -> ok.
+stop_timer(Name) ->
+  katja_vmstats_collector:stop_timer(Name).

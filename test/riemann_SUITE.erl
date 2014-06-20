@@ -27,7 +27,8 @@
 % Tests
 -export([
   timer_events/1,
-  manual_events/1
+  manual_events/1,
+  timer/1
 ]).
 
 % Common Test
@@ -35,7 +36,8 @@
 all() ->
   [
     timer_events,
-    manual_events
+    manual_events,
+    timer
   ].
 
 init_per_suite(Config) ->
@@ -69,3 +71,14 @@ manual_events(_Config) ->
   {metric, EtsLimit} = lists:keyfind(metric, 1, EtsLimitEvent),
   {ok, [ProcessLimitEvent]} = katja:query_event([{service, "katja_vmstats tuple_process_limit"}]),
   {metric, ProcessLimit} = lists:keyfind(metric, 1, ProcessLimitEvent).
+
+timer(_Config) ->
+  1 = length(katja_vmstats:get_timer(all)),
+  1 = length(katja_vmstats:get_timer(config)),
+  ok = katja_vmstats:start_timer(test, [{interval, 1000}, {metrics, [{"reductions_process", reductions_process, [katja_vmstats_collector]}]}]),
+  2 = length(katja_vmstats:get_timer(all)),
+  1 = length(katja_vmstats:get_timer(test)),
+  ok = timer:sleep(2000), % Wait for two seconds, so that the timer can actually sent stuff
+  {ok, [_]} = katja:query_event([{service, "katja_vmstats reductions_process"}]),
+  ok = katja_vmstats:stop_timer(test),
+  1 = length(katja_vmstats:get_timer(all)).
