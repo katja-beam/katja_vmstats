@@ -41,6 +41,7 @@ all() ->
   ].
 
 init_per_suite(Config) ->
+  ok = application:start(protobuffs),
   ok = application:start(katja),
   ok = application:start(katja_vmstats),
   Config.
@@ -48,6 +49,7 @@ init_per_suite(Config) ->
 end_per_suite(_Config) ->
   ok = application:stop(katja_vmstats),
   ok = application:stop(katja),
+  ok = application:stop(protobuffs),
   ok.
 
 % Tests
