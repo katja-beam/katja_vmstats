@@ -2,6 +2,8 @@
 
 ## 0.4
 
+[Documentation](http://katja_vmstats.nifoc.pw/0.4/)
+
 * Update Katja dependency to [v0.5](https://github.com/nifoc/katja/tree/v0.5)
 * Add `katja_vmstats:get_timer/1`, `katja_vmstats:start_timer/2` and `katja_vmstats:stop_timer/1` to programmatically interact with timers/intervals
 

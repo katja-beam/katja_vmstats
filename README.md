@@ -98,7 +98,7 @@ Timers can be stopped using `katja_vmstats:stop_timer/1`. You can set the name t
 
 ## Resources
 
-* [Generated EDoc](http://katja_vmstats.nifoc.pw/0.3/) ([All Versions](http://katja_vmstats.nifoc.pw))
+* [Generated EDoc](http://katja_vmstats.nifoc.pw/0.4/) ([All Versions](http://katja_vmstats.nifoc.pw))
 
 ## Related Projects
 
