@@ -203,18 +203,13 @@ stop_collection_intervals(Timer) ->
 
 -spec create_events(iolist(), [atom()]) -> {ok, [katja:event()]}.
 create_events(Service, Metrics) ->
-  Timestamp = current_timestamp(),
+  Timestamp = katja_vmstats_utils:current_timestamp(),
   Events = katja_vmstats_utils:parallel_map(fun(Metric) ->
     MetricService = get_metric_service(Service, Metric),
     MetricValue = get_metric_value(Metric),
     [{service, MetricService}, {time, Timestamp}, {tags, ["katja_vmstats"]}, {metric, MetricValue}]
   end, Metrics),
   {ok, Events}.
-
--spec current_timestamp() -> pos_integer().
-current_timestamp() ->
-  {MegaSecs, Secs, _MicroSecs} = os:timestamp(),
-  MegaSecs * 1000000 + Secs.
 
 -spec get_metric_service(iolist(), katja_vmstats:metric()) -> iolist().
 get_metric_service(BaseService, Metric) when is_atom(Metric) ->

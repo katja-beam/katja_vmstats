@@ -18,10 +18,16 @@
 
 % API
 -export([
+  current_timestamp/0,
   parallel_map/2
 ]).
 
 % API
+
+-spec current_timestamp() -> pos_integer().
+current_timestamp() ->
+  {MegaSecs, Secs, _MicroSecs} = os:timestamp(),
+  MegaSecs * 1000000 + Secs.
 
 -spec parallel_map(fun((A) -> B), [A]) -> [B].
 parallel_map(_Fun, []) -> [];
