@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5
+
+* Metrics are now collected in parallel
+
 ## 0.4
 
 [Documentation](http://katja_vmstats.nifoc.pw/0.4/)
