@@ -3,7 +3,7 @@
 ## 0.5
 
 * Add [noesis](https://github.com/nifoc/noesis) dependency
-* Metrics are now collected in parallel
+* Metric collections are now collected in parallel
 
 ## 0.4
 
