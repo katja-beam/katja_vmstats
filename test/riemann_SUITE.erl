@@ -41,6 +41,7 @@ all() ->
   ].
 
 init_per_suite(Config) ->
+  ok = application:start(noesis),
   ok = application:start(protobuffs),
   ok = application:start(katja),
   ok = application:start(katja_vmstats),
@@ -50,6 +51,7 @@ end_per_suite(_Config) ->
   ok = application:stop(katja_vmstats),
   ok = application:stop(katja),
   ok = application:stop(protobuffs),
+  ok = application:stop(noesis),
   ok.
 
 % Tests

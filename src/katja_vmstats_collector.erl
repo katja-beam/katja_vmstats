@@ -190,8 +190,8 @@ code_change(_OldVsn, State, _Extra) ->
 -spec start_collection_intervals(atom(), [katja_vmstats:collection()], state()) -> state().
 start_collection_intervals(Name, MetricsIntervals, State) ->
   lists:foldr(fun(MetricsInterval, #collector_state{timer=Timer}=S) ->
-    {interval, Interval} = lists:keyfind(interval, 1, MetricsInterval),
-    {metrics, Metrics} = lists:keyfind(metrics, 1, MetricsInterval),
+    Interval = noesis_proplists:get_value(interval, MetricsInterval),
+    Metrics = noesis_proplists:get_value(metrics, MetricsInterval),
     {ok, TRef} = timer:send_interval(Interval, {collect, Metrics}),
     S#collector_state{timer=[{Name, Interval, TRef} | Timer]}
   end, State, MetricsIntervals).
@@ -203,8 +203,8 @@ stop_collection_intervals(Timer) ->
 
 -spec create_events(iolist(), [atom()]) -> {ok, [katja:event()]}.
 create_events(Service, Metrics) ->
-  Timestamp = katja_vmstats_utils:current_timestamp(),
-  Events = katja_vmstats_utils:parallel_map(fun(Metric) ->
+  Timestamp = noesis_datetime:timestamp(),
+  Events = noesis_lists:pmap(fun(Metric) ->
     MetricService = get_metric_service(Service, Metric),
     MetricValue = get_metric_value(Metric),
     [{service, MetricService}, {time, Timestamp}, {tags, ["katja_vmstats"]}, {metric, MetricValue}]

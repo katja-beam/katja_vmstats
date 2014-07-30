@@ -9,6 +9,7 @@
   {applications, [
     kernel,
     stdlib,
+    noesis,
     katja
   ]},
   {mod, {katja_vmstats_app, []}},
