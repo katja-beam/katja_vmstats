@@ -1,84 +1,38 @@
-DEPS = $(CURDIR)/deps
+PROJECT = katja_vmstats
+PROJECT_VERSION = 0.4
 
-DIALYZER_OPTS = -Wunmatched_returns -Werror_handling -Wrace_conditions
+DEPS = noesis katja
+dep_noesis = git https://github.com/nifoc/noesis development
+dep_katja = git https://github.com/nifoc/katja development
 
-# List dependencies that should be included in a cached dialyzer PLT file.
-DIALYZER_DEPS = deps/*/ebin
+TEST_DEPS = nifoc_ct_helper
+dep_nifoc_ct_helper = git https://github.com/nifoc/nifoc_ct_helper master
 
-DEPS_PLT = .katja_vmstats.plt
+ERLC_OPTS ?= -Werror +debug_info +warn_bif_clash +warn_deprecated_function +warn_deprecated_type \
+				+warn_export_all +warn_export_vars +warn_shadow_vars +warn_obsolete_guard +warn_unused_import \
+				+warn_unused_function +warn_unused_record +warn_unused_vars +warnings_as_errors
 
-ERLANG_DIALYZER_APPS = asn1 \
-                       compiler \
-                       crypto \
-                       erts \
-                       inets \
-                       kernel \
-                       mnesia \
-                       public_key \
-                       runtime_tools \
-                       sasl \
-                       ssl \
-                       stdlib \
-                       syntax_tools \
-                       xmerl
+TEST_ERLC_OPTS ?= +debug_info +warn_bif_clash +warn_deprecated_function +warn_deprecated_type \
+				+warn_export_all +warn_export_vars +warn_shadow_vars +warn_obsolete_guard +warn_unused_import \
+				+warn_unused_function +warn_unused_record +warn_unused_vars +warnings_as_errors
 
-all: compile eunit ct dialyzer
+CT_SUITES = eunit riemann
+CT_OPTS = -ct_hooks nifoc_ct_hook []
 
-# Clean ebin and .eunit of this project
-clean:
-	@./rebar clean skip_deps=true
-
-# Clean this project and all deps
-allclean:
-	@./rebar clean
-
-compile: $(DEPS)
-	@./rebar compile
-
-$(DEPS):
-	@./rebar get-deps
-
-# Full clean and removal of all deps. Remove deps first to avoid
-# wasted effort of cleaning deps before nuking them.
-distclean:
-	@rm -rf deps $(DEPS_PLT)
-	@./rebar clean
-
-eunit:
-	@./rebar skip_deps=true eunit
-
-ct:
-	@./rebar skip_deps=true ct -v
-
-xref:
-	@./rebar skip_deps=true xref
-
-test: compile xref eunit ct
-
-# Only include local PLT if we have deps that we are going to analyze
-ifeq ($(strip $(DIALYZER_DEPS)),)
-dialyzer: ~/.dialyzer_plt
-	@dialyzer $(DIALYZER_OPTS) -r ebin
-else
-dialyzer: ~/.dialyzer_plt $(DEPS_PLT)
-	@dialyzer $(DIALYZER_OPTS) --plts ~/.dialyzer_plt $(DEPS_PLT) -r ebin
-
-$(DEPS_PLT):
-	@dialyzer --build_plt $(DIALYZER_DEPS) --output_plt $(DEPS_PLT)
+ifneq ($(USER),travis)
+	CT_OPTS += -cover ./test/cover.spec
 endif
 
-~/.dialyzer_plt:
-	@echo "ERROR: Missing ~/.dialyzer_plt. Please wait while a new PLT is compiled."
-	dialyzer --build_plt --apps $(ERLANG_DIALYZER_APPS)
-	@echo "now try your build again"
+EDOC_OPTS = {def, [ \
+					{years, "2014"}, \
+					{version, "$(PROJECT_VERSION)"} \
+				]}
 
-# Generate documentation
-doc:
-	@rm -rf ./doc/*.html ./doc/edoc-info ./doc/erlang.png ./doc/stylesheet.css
-	@./rebar doc skip_deps=true
+include erlang.mk
 
-# Upload generated documentation
-deploydoc: doc
-	@./deploy_doc
+upload-docs: docs
+	$(gen_verbose) echo $(PROJECT_VERSION)
+	rsync -avz --no-o --no-g -e ssh --chmod=og=r -p --delete --exclude '*.edoc' --exclude 'edoc-info' doc/ kempkens:/var/www/nifoc/$(PROJECT)/$(PROJECT_VERSION)
+	ssh kempkens chown -R www-data:www-data /var/www/nifoc/$(PROJECT)/$(PROJECT_VERSION)
 
-.PHONY: all compile eunit ct xref test dialyzer clean allclean distclean doc deploydoc
+.PHONY: upload-docs

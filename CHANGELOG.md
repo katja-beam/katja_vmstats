@@ -2,6 +2,7 @@
 
 ## 0.5
 
+* Switch from [Rebar](https://github.com/rebar/rebar) to [erlang.mk](https://github.com/ninenines/erlang.mk)
 * Add [noesis](https://github.com/nifoc/noesis) dependency
 * Metric collections are now collected in parallel
 

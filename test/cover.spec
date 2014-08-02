@@ -1,2 +1,6 @@
 {incl_app, katja_vmstats, details}.
-%{import, [".eunit/eunit.coverdata"]}.
+{excl_mods, katja_vmstats, [
+  katja_vmstats_metrics_test,
+  eunit_SUITE,
+  riemann_SUITE
+]}.
