@@ -4,3 +4,4 @@
   eunit_SUITE,
   riemann_SUITE
 ]}.
+{export, "logs/all.coverdata"}.
