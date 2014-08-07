@@ -17,6 +17,8 @@
 
 -module(katja_vmstats).
 
+-compile({no_auto_import, [start_timer/3]}).
+
 % Types
 
 -type metric() :: atom() | {iolist(), atom(), [any()]} | {iolist(), module(), atom(), [any()]}.
