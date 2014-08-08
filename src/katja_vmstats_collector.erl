@@ -129,7 +129,7 @@ init([]) ->
       State2 = start_collection_intervals(config, MetricsIntervals, State),
       {ok, State2};
     DelayCollection > 0 ->
-      {ok, _TRef} = timer:send_after(DelayCollection, {start_collection_intervals, config, MetricsIntervals}),
+      _TRef = erlang:send_after(DelayCollection, self(), {start_collection_intervals, config, MetricsIntervals}),
       {ok, State}
   end.
 
