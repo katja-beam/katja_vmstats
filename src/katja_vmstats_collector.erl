@@ -21,6 +21,7 @@
 -endif.
 
 -define(DEFAULT_SERVICE, "katja_vmstats").
+-define(DEFAULT_TRANSPORT, config).
 -define(DEFAULT_DELAY_COLLECTION, 0).
 -define(DEFAULT_COLLECTOR, [
   [
@@ -47,6 +48,7 @@
 
 -record(collector_state, {
   service :: iolist(),
+  transport :: katja_connection:transport(),
   timer :: [{atom(), pos_integer(), timer:tref()}]
 }).
 
@@ -121,9 +123,10 @@ stop_timer(Name) ->
 % @hidden
 init([]) ->
   Service = application:get_env(katja_vmstats, service, ?DEFAULT_SERVICE),
+  Transport = application:get_env(katja_vmstats, transport, ?DEFAULT_TRANSPORT),
   DelayCollection = application:get_env(katja_vmstats, delay_collection, ?DEFAULT_DELAY_COLLECTION),
   MetricsIntervals = application:get_env(katja_vmstats, collector, ?DEFAULT_COLLECTOR),
-  State = #collector_state{service=Service, timer=[]},
+  State = #collector_state{service=Service, transport=Transport, timer=[]},
   if
     DelayCollection == 0 ->
       State2 = start_collection_intervals(config, MetricsIntervals, State),
@@ -158,10 +161,9 @@ handle_call(_Request, _From, State) ->
   {reply, ignored, State}.
 
 % @hidden
-handle_cast({collect, Metrics}, #collector_state{service=Service}=S) ->
-  {ok, Events} = create_events(Service, Metrics),
-  ok = katja:send_events(Events),
-  {noreply, S};
+handle_cast({collect, Metrics}, State) ->
+  ok = collect_events(Metrics, State),
+  {noreply, State};
 handle_cast(_Msg, State) ->
   {noreply, State}.
 
@@ -169,10 +171,9 @@ handle_cast(_Msg, State) ->
 handle_info({start_collection_intervals, Name, MetricsIntervals}, State) ->
   State2 = start_collection_intervals(Name, MetricsIntervals, State),
   {noreply, State2};
-handle_info({collect, Metrics}, #collector_state{service=Service}=S) ->
-  {ok, Events} = create_events(Service, Metrics),
-  ok = katja:send_events(Events),
-  {noreply, S};
+handle_info({collect, Metrics}, State) ->
+  ok = collect_events(Metrics, State),
+  {noreply, State};
 handle_info(_Msg, State) ->
   {noreply, State}.
 
@@ -201,7 +202,12 @@ stop_collection_intervals(Timer) ->
   _ = [{ok, cancel} = timer:cancel(TRef) || {_Name, _Interval, TRef} <- Timer],
   ok.
 
--spec create_events(iolist(), [atom()]) -> {ok, [katja:event()]}.
+-spec collect_events([katja_vmstats:metric()], state()) -> ok | {error, term()}.
+collect_events(Metrics, #collector_state{service=Service, transport=Transport}) ->
+  {ok, Events} = create_events(Service, Metrics),
+  katja:send_events(katja_writer, Transport, Events).
+
+-spec create_events(iolist(), [katja_vmstats:metric()]) -> {ok, [katja:event()]}.
 create_events(Service, Metrics) ->
   Timestamp = noesis_datetime:timestamp(),
   Events = noesis_lists:pmap(fun(Metric) ->

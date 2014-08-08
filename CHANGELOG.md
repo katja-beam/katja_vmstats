@@ -6,6 +6,7 @@
 * Update Katja dependency to [v0.6](https://github.com/nifoc/katja/tree/v0.6)
 * Add [noesis](https://github.com/nifoc/noesis/tree/v0.2) dependency
 * Add `katja_vmstats:stop/0` to stop the Katja VM Stats application and all of its dependencies
+* Allow setting a specific message transport (`config`, `detect`, `udp`, `tcp`) just for Katja VM Stats
 * Metric collections are now collected in parallel
 
 ## 0.4
