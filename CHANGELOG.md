@@ -5,6 +5,7 @@
 * Switch from [Rebar](https://github.com/rebar/rebar) to [erlang.mk](https://github.com/ninenines/erlang.mk)
 * Update Katja dependency to [v0.6](https://github.com/nifoc/katja/tree/v0.6)
 * Add [noesis](https://github.com/nifoc/noesis/tree/v0.2) dependency
+* Add `katja_vmstats:stop/0` to stop the Katja VM Stats application and all of its dependencies
 * Metric collections are now collected in parallel
 
 ## 0.4

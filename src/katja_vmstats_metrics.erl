@@ -15,6 +15,10 @@
 
 -module(katja_vmstats_metrics).
 
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 % API
 -export([
   all_message_queues/0,
@@ -284,3 +288,12 @@ r16_ets_limit() ->
     false -> 1400;
     Limit -> list_to_integer(Limit)
   end.
+
+% Tests (private functions)
+
+-ifdef(TEST).
+r16_ets_limit_test() ->
+  ?assertEqual(1400, r16_ets_limit()),
+  true = os:putenv("ERL_MAX_ETS_TABLES", "1600"),
+  ?assertEqual(1600, r16_ets_limit()).
+-endif.

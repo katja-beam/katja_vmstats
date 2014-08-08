@@ -13,51 +13,63 @@
 % option is required:
 %   (tagged "katja_vmstats" index)
 
--module(riemann_SUITE).
+-module(collector_SUITE).
 
 -include_lib("common_test/include/ct.hrl").
 
 % Common Test
 -export([
   all/0,
-  init_per_suite/1,
-  end_per_suite/1
+  groups/0,
+  init_per_group/2,
+  end_per_group/2
 ]).
 
 % Tests
 -export([
-  timer_events/1,
+  config_events/1,
   manual_events/1,
-  timer/1
+  programmatic_timer/1,
+  ignore_unknown_messages/1
 ]).
 
 % Common Test
 
 all() ->
   [
-    timer_events,
-    manual_events,
-    timer
+    {group, without_delay},
+    {group, with_delay}
   ].
 
-init_per_suite(Config) ->
-  ok = application:start(noesis),
-  ok = application:start(protobuffs),
-  ok = application:start(katja),
-  ok = application:start(katja_vmstats),
-  Config.
+groups() ->
+  [
+    {without_delay, [sequence], [
+      config_events,
+      manual_events,
+      programmatic_timer,
+      ignore_unknown_messages
+    ]},
+    {with_delay, [sequence], [
+      config_events
+    ]}
+  ].
 
-end_per_suite(_Config) ->
-  ok = application:stop(katja_vmstats),
-  ok = application:stop(katja),
-  ok = application:stop(protobuffs),
-  ok = application:stop(noesis),
+init_per_group(without_delay, Config) ->
+  ok = katja_vmstats:start(),
+  [{manual_delay, 1500}, {auto_delay, 1500} | Config];
+init_per_group(with_delay, Config) ->
+  ok = application:set_env(katja_vmstats, delay_collection, 5000),
+  ok = katja_vmstats:start(),
+  [{manual_delay, 1500}, {auto_delay, 6500} | Config].
+
+end_per_group(_Group, _Config) ->
+  ok = katja_vmstats:stop(),
   ok.
 
 % Tests
 
-timer_events(_Config) ->
-  ok = timer:sleep(2000), % Wait for two seconds, so that the timer can actually sent stuff
+config_events(Config) ->
+  ok = timer:sleep(?config(auto_delay, Config)), % Wait a bit, so that the timer can actually send stuff
   ProcessLimit = katja_vmstats_metrics:process_limit(),
   {ok, [ProcessEvent]} = katja:query_event([{service, "katja_vmstats process_limit"}]),
   {metric, ProcessLimit} = lists:keyfind(metric, 1, ProcessEvent).
@@ -76,13 +88,20 @@ manual_events(_Config) ->
   {ok, [ProcessLimitEvent]} = katja:query_event([{service, "katja_vmstats tuple_process_limit"}]),
   {metric, ProcessLimit} = lists:keyfind(metric, 1, ProcessLimitEvent).
 
-timer(_Config) ->
+programmatic_timer(Config) ->
   1 = length(katja_vmstats:get_timer(all)),
   1 = length(katja_vmstats:get_timer(config)),
   ok = katja_vmstats:start_timer(test, [{interval, 1000}, {metrics, [{"reductions_process", reductions_process, [katja_vmstats_collector]}]}]),
   2 = length(katja_vmstats:get_timer(all)),
   1 = length(katja_vmstats:get_timer(test)),
-  ok = timer:sleep(2000), % Wait for two seconds, so that the timer can actually sent stuff
+  ok = timer:sleep(?config(manual_delay, Config)), % Wait a bit, so that the timer can actually send stuff
   {ok, [_]} = katja:query_event([{service, "katja_vmstats reductions_process"}]),
   ok = katja_vmstats:stop_timer(test),
-  1 = length(katja_vmstats:get_timer(all)).
+  1 = length(katja_vmstats:get_timer(all)),
+  ok = katja_vmstats:stop_timer(all),
+  0 = length(katja_vmstats:get_timer(all)).
+
+ignore_unknown_messages(_Config) ->
+  ignored = gen_server:call(katja_vmstats_collector, foobar),
+  ok = gen_server:cast(katja_vmstats_collector, foobar),
+  katja_vmstats_collector ! foobar.
