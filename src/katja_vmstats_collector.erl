@@ -46,8 +46,8 @@
 ]).
 
 -record(collector_state, {
-  service = undefined :: iolist() | undefined,
-  timer = undefined :: [{atom(), pos_integer(), timer:tref()}] | undefined
+  service :: iolist(),
+  timer :: [{atom(), pos_integer(), timer:tref()}]
 }).
 
 % Types
