@@ -58,9 +58,10 @@ init_per_group(without_delay, Config) ->
   ok = katja_vmstats:start(),
   [{manual_delay, 1500}, {auto_delay, 1500} | Config];
 init_per_group(with_delay, Config) ->
+  ok = application:set_env(katja_vmstats, send_async, true),
   ok = application:set_env(katja_vmstats, delay_collection, 5000),
   ok = katja_vmstats:start(),
-  [{manual_delay, 1500}, {auto_delay, 6500} | Config].
+  [{manual_delay, 2000}, {auto_delay, 6500} | Config].
 
 end_per_group(_Group, _Config) ->
   ok = katja_vmstats:stop(),

@@ -22,6 +22,7 @@
 
 -define(DEFAULT_SERVICE, "katja_vmstats").
 -define(DEFAULT_TRANSPORT, config).
+-define(DEFAULT_SEND_ASYNC, false).
 -define(DEFAULT_DELAY_COLLECTION, 0).
 -define(DEFAULT_COLLECTOR, [
   [
@@ -49,6 +50,7 @@
 -record(collector_state, {
   service :: iolist(),
   transport :: katja_connection:transport(),
+  send_async :: boolean(),
   timer :: [{atom(), pos_integer(), timer:tref()}]
 }).
 
@@ -124,9 +126,10 @@ stop_timer(Name) ->
 init([]) ->
   Service = application:get_env(katja_vmstats, service, ?DEFAULT_SERVICE),
   Transport = application:get_env(katja_vmstats, transport, ?DEFAULT_TRANSPORT),
+  SendAsync = application:get_env(katja_vmstats, send_async, ?DEFAULT_SEND_ASYNC),
   DelayCollection = application:get_env(katja_vmstats, delay_collection, ?DEFAULT_DELAY_COLLECTION),
   MetricsIntervals = application:get_env(katja_vmstats, collector, ?DEFAULT_COLLECTOR),
-  State = #collector_state{service=Service, transport=Transport, timer=[]},
+  State = #collector_state{service=Service, transport=Transport, send_async=SendAsync, timer=[]},
   if
     DelayCollection == 0 ->
       State2 = start_collection_intervals(config, MetricsIntervals, State),
@@ -203,9 +206,12 @@ stop_collection_intervals(Timer) ->
   ok.
 
 -spec collect_events([katja_vmstats:metric()], state()) -> ok | {error, term()}.
-collect_events(Metrics, #collector_state{service=Service, transport=Transport}) ->
+collect_events(Metrics, #collector_state{service=Service, transport=Transport, send_async=SendAsync}) ->
   {ok, Events} = create_events(Service, Metrics),
-  katja:send_events(katja_writer, Transport, Events).
+  if
+    SendAsync -> katja:send_events_async(katja_writer, Transport, Events);
+    true -> katja:send_events(katja_writer, Transport, Events)
+  end.
 
 -spec create_events(iolist(), [katja_vmstats:metric()]) -> {ok, [katja:event()]}.
 create_events(Service, Metrics) ->

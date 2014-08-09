@@ -7,6 +7,7 @@
 * Add [noesis](https://github.com/nifoc/noesis/tree/v0.2) dependency
 * Add `katja_vmstats:stop/0` to stop the Katja VM Stats application and all of its dependencies
 * Allow setting a specific message transport (`config`, `detect`, `udp`, `tcp`) just for Katja VM Stats
+* Allow sending events to Riemann asynchronously using the `send_async` configuration option
 * Metric collections are now collected in parallel
 
 ## 0.4

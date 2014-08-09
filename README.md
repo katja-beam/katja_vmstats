@@ -16,6 +16,7 @@ This is alpha software. Things might still change in ways that break everything.
   {katja_vmstats, [
     {service, "katja_vmstats"},
     {transport, config},
+    {send_async, false},
     {delay_collection, 0},
     {collector, [
       [
@@ -46,6 +47,8 @@ This is alpha software. Things might still change in ways that break everything.
 **service**: Base value for the `service` field of events
 
 **transport**: The message transport that should be used (supported: `config`, `detect`, `udp`, `tcp`)
+
+**send_async**: Wether or not data should be send to Riemann asynchronously
 
 **delay_collection**: Delays the initial collection of metrics by the specified amount of milliseconds
 
