@@ -75,13 +75,14 @@ config_events(Config) ->
   {ok, [ProcessEvent]} = katja:query_event([{service, "katja_vmstats process_limit"}]),
   {metric, ProcessLimit} = lists:keyfind(metric, 1, ProcessEvent).
 
-manual_events(_Config) ->
+manual_events(Config) ->
   EtsCount = katja_vmstats_metrics:ets_count(),
   EtsLimit = katja_vmstats_metrics:ets_limit(),
   ProcessLimit = katja_vmstats_metrics:process_limit(),
   ok = katja_vmstats:collect(ets_count),
   ok = katja_vmstats:collect([ets_limit]),
   ok = katja_vmstats:collect({"tuple_process_limit", erlang, system_info, [process_limit]}),
+  ok = timer:sleep(?config(manual_delay, Config)), % Wait a bit, so that we can actually send stuff
   {ok, [EtsCountEvent]} = katja:query_event([{service, "katja_vmstats ets_count"}]),
   {metric, EtsCount} = lists:keyfind(metric, 1, EtsCountEvent),
   {ok, [EtsLimitEvent]} = katja:query_event([{service, "katja_vmstats ets_limit"}]),

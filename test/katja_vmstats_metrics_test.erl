@@ -111,6 +111,9 @@ reductions_process_test() ->
 reductions_total_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:reductions_total()).
 
+registered_processes_test() ->
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:registered_processes()).
+
 run_queue_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:run_queue()).
 

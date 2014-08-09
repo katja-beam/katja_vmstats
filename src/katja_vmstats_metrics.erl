@@ -54,6 +54,7 @@
   reductions_last_call/0,
   reductions_process/1,
   reductions_total/0,
+  registered_processes/0,
   run_queue/0,
   stack_size/1
 ]).
@@ -257,6 +258,11 @@ reductions_process(Pid) ->
 reductions_total() ->
   {Total, _LastCall} = erlang:statistics(reductions),
   Total.
+
+% @doc Returns the numer of registered processes.
+-spec registered_processes() -> pos_integer().
+registered_processes() ->
+  length(registered()).
 
 % @doc Returns the total length of the run queues, that is, the number of processes that are ready to run on all available run queues.
 -spec run_queue() -> non_neg_integer().

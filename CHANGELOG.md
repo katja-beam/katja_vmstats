@@ -9,6 +9,7 @@
 * Allow setting a specific message transport (`config`, `detect`, `udp`, `tcp`) just for Katja VM Stats
 * Allow sending events to Riemann asynchronously using the `send_async` configuration option
 * Metric collections are now collected in parallel
+* New metric: `registered_processes/0`
 
 ## 0.4
 
