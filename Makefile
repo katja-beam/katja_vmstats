@@ -1,5 +1,5 @@
 PROJECT = katja_vmstats
-PROJECT_VERSION = 0.4
+PROJECT_VERSION = 0.5
 
 DEPS = noesis katja
 dep_noesis = git https://github.com/nifoc/noesis v0.2

@@ -2,6 +2,8 @@
 
 ## 0.5
 
+[Documentation](http://katja_vmstats.nifoc.pw/0.5/)
+
 * Switch from [Rebar](https://github.com/rebar/rebar) to [erlang.mk](https://github.com/ninenines/erlang.mk)
 * Update Katja dependency to [v0.6](https://github.com/nifoc/katja/tree/v0.6)
 * Add [noesis](https://github.com/nifoc/noesis/tree/v0.2) dependency

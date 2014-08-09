@@ -2,7 +2,7 @@
 
 Easily send information about the Erlang VM to Riemann.
 
-[![Build Status](https://travis-ci.org/nifoc/katja_vmstats.png)](https://travis-ci.org/nifoc/katja_vmstats)
+[![Build Status](https://travis-ci.org/nifoc/katja_vmstats.png)](https://travis-ci.org/nifoc/katja_vmstats) [![Coverage Status](https://coveralls.io/repos/nifoc/katja_vmstats/badge.png?branch=master)](https://coveralls.io/r/nifoc/katja_vmstats?branch=master)
 
 ## Status
 
@@ -104,7 +104,7 @@ Timers can be stopped using `katja_vmstats:stop_timer/1`. You can set the name t
 
 ## Resources
 
-* [Generated EDoc](http://katja_vmstats.nifoc.pw/0.4/) ([All Versions](http://katja_vmstats.nifoc.pw))
+* [Generated EDoc](http://katja_vmstats.nifoc.pw/0.5/) ([All Versions](http://katja_vmstats.nifoc.pw))
 
 ## Related Projects
 
