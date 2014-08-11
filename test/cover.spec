@@ -2,6 +2,6 @@
 {excl_mods, katja_vmstats, [
   katja_vmstats_metrics_test,
   eunit_SUITE,
-  riemann_SUITE
+  collector_SUITE
 ]}.
 {export, "logs/all.coverdata"}.
