@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6
+
+* Update Katja dependency to [v0.7](https://github.com/nifoc/katja/tree/v0.7)
+* Update noesis dependency to [v0.2.1](https://github.com/nifoc/noesis/tree/v0.2.1)
+* Allow setting a sample rate for asynchronous events using the `async_sample_rate` configuration option
+
 ## 0.5
 
 [Documentation](http://katja_vmstats.nifoc.pw/0.5/)

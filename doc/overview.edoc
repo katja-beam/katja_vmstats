@@ -18,6 +18,7 @@ The default configuration looks like this:
     {service, "katja_vmstats"},
     {transport, config},
     {send_async, false},
+    {async_sample_rate, 1.0},
     {delay_collection, 0},
     {collector, [
       [

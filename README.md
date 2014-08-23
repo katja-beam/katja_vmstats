@@ -17,6 +17,7 @@ This is alpha software. Things might still change in ways that break everything.
     {service, "katja_vmstats"},
     {transport, config},
     {send_async, false},
+    {async_sample_rate, 1.0},
     {delay_collection, 0},
     {collector, [
       [
@@ -49,6 +50,8 @@ This is alpha software. Things might still change in ways that break everything.
 **transport**: The message transport that should be used (supported: `config`, `detect`, `udp`, `tcp`)
 
 **send_async**: Wether or not data should be send to Riemann asynchronously
+
+**async_sample_rate**: Sample rate that will be used if messages are send asynchronously (useful if not *every* collection has to be send to Riemann all the time)
 
 **delay_collection**: Delays the initial collection of metrics by the specified amount of milliseconds
 

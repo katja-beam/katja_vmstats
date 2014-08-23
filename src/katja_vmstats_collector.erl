@@ -23,6 +23,7 @@
 -define(DEFAULT_SERVICE, "katja_vmstats").
 -define(DEFAULT_TRANSPORT, config).
 -define(DEFAULT_SEND_ASYNC, false).
+-define(DEFAULT_ASYNC_SAMPLE_RATE, 1.0).
 -define(DEFAULT_DELAY_COLLECTION, 0).
 -define(DEFAULT_COLLECTOR, [
   [
@@ -51,6 +52,7 @@
   service :: iolist(),
   transport :: katja_connection:transport(),
   send_async :: boolean(),
+  async_sample_rate :: float(),
   timer :: [{atom(), pos_integer(), timer:tref()}]
 }).
 
@@ -127,9 +129,10 @@ init([]) ->
   Service = application:get_env(katja_vmstats, service, ?DEFAULT_SERVICE),
   Transport = application:get_env(katja_vmstats, transport, ?DEFAULT_TRANSPORT),
   SendAsync = application:get_env(katja_vmstats, send_async, ?DEFAULT_SEND_ASYNC),
+  AsyncSampleRate = application:get_env(katja_vmstats, async_sample_rate, ?DEFAULT_ASYNC_SAMPLE_RATE),
   DelayCollection = application:get_env(katja_vmstats, delay_collection, ?DEFAULT_DELAY_COLLECTION),
   MetricsIntervals = application:get_env(katja_vmstats, collector, ?DEFAULT_COLLECTOR),
-  State = #collector_state{service=Service, transport=Transport, send_async=SendAsync, timer=[]},
+  State = #collector_state{service=Service, transport=Transport, send_async=SendAsync, async_sample_rate=AsyncSampleRate, timer=[]},
   if
     DelayCollection == 0 ->
       State2 = start_collection_intervals(config, MetricsIntervals, State),
@@ -206,10 +209,10 @@ stop_collection_intervals(Timer) ->
   ok.
 
 -spec collect_events([katja_vmstats:metric()], state()) -> ok | {error, term()}.
-collect_events(Metrics, #collector_state{service=Service, transport=Transport, send_async=SendAsync}) ->
+collect_events(Metrics, #collector_state{service=Service, transport=Transport, send_async=SendAsync, async_sample_rate=AsyncSampleRate}) ->
   {ok, Events} = create_events(Service, Metrics),
   if
-    SendAsync -> katja:send_events_async(katja_writer, Transport, Events);
+    SendAsync -> katja:send_events_async(katja_writer, Transport, Events, AsyncSampleRate);
     true -> katja:send_events(katja_writer, Transport, Events)
   end.
 
