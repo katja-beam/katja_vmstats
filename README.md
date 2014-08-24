@@ -78,32 +78,32 @@ ok = katja_vmstats:collect({"process_limit", erlang, system_info, [process_limit
 * `{iolist(), atom(), [any()]}`: A function defined and exported in the `katja_vmstats_metrics` module. The first tuple field is the name of the metric, the second and the third field are the *FA* part of *MFA*.
 * `{iolist(), module(), atom(), [any()]}`: Any function in any module that returns a `number()`. The first tuple field is the name of the metric, the following fields are *MFA*.
 
-### Working with timers
+### Working with collections
 
 ```erlang
-AllTimers = katja_vmstats:get_timer(all), % => [{config, 1000}]
-ConfigTimers = katja_vmstats:get_timer(config). % => [{config, 1000}]
+AllCollections = katja_vmstats:get_collection(all), % => [[{name, config}, {metrics, […]}, {interval, 1000}, {send_async, false}, {async_sample_rate, 1.0}]]
+ConfigCollection = katja_vmstats:get_collection(config). % => [[{name, config}, {metrics, […]}, {interval, 1000}, {send_async, false}, {async_sample_rate, 1.0}]]
 ```
 
-You can get a list of registered timers and their intervals using `katja_vmstats:get_timer/1`. If a timer has more than one interval, it will show up multiple times in the returned list.
+You can get a list of registered collections using `katja_vmstats:get_collection/1`. If a collection consists of multiple `katja_vmstats:collection()` entries, it will show up multiple times in the returned list.
 
-The timers that are specified via configuration options will always be registered under the name `config`. You can get all intervals by setting the name to `all`.
+The collections that are specified via configuration options will always be registered under the name `config`. You can get all intervals by setting the name to `all`.
 
 ```erlang
 Metrics = [{"reductions_process", reductions_process, [katja_vmstats_collector]}],
-ok = katja_vmstats:start_timer(demo, [{interval, 1000}, {metrics, Metrics}]),
-AllTimers = katja_vmstats:get_timer(all), % => [{demo, 1000}, {config, 1000}]
-DemoTimers = katja_vmstats:get_timer(demo). % => [{demo, 1000}]
+ok = katja_vmstats:start_collection(demo, [{interval, 1000}, {metrics, Metrics}]),
+AllCollections = katja_vmstats:get_collection(all), % => [[…], […]]
+DemoCollection = katja_vmstats:get_collection(demo). % => [[{name, demo}, {metrics, […]}, {interval, 1000}, {send_async, false}, {async_sample_rate, 1.0}]]
 ```
 
-You can start new timers using `katja_vmstats:start_timer/2`. The first argument is the name of the timer and the second argument is a property list (or a list of property lists) in the format of the `collector` configuration option.
+You can start new collections using `katja_vmstats:start_collection/2`. The first argument is the name of the collection and the second argument is a property list (or a list of property lists) in the format of `katja_vmstats:collection()`. The `name` attribute of the property list will be ignored.
 
 ```erlang
-ok = katja_vmstats:stop_timer(demo),
-AllTimers = katja_vmstats:get_timer(all). % => [{config, 1000}]
+ok = katja_vmstats:stop_collection(demo),
+AllCollections = katja_vmstats:get_collection(all). % => [[{name, config}, {metrics, […]}, {interval, 1000}, {send_async, false}, {async_sample_rate, 1.0}]]
 ```
 
-Timers can be stopped using `katja_vmstats:stop_timer/1`. You can set the name to `all` in order to stop all registered timers.
+Collections can be stopped using `katja_vmstats:stop_collection/1`. You can set the name to `all` in order to stop all registered collections.
 
 ## Resources
 

@@ -91,17 +91,17 @@ manual_events(Config) ->
   {metric, ProcessLimit} = lists:keyfind(metric, 1, ProcessLimitEvent).
 
 programmatic_timer(Config) ->
-  1 = length(katja_vmstats:get_timer(all)),
-  1 = length(katja_vmstats:get_timer(config)),
-  ok = katja_vmstats:start_timer(test, [{interval, 1000}, {metrics, [{"reductions_process", reductions_process, [katja_vmstats_collector]}]}]),
-  2 = length(katja_vmstats:get_timer(all)),
-  1 = length(katja_vmstats:get_timer(test)),
+  1 = length(katja_vmstats:get_collection(all)),
+  1 = length(katja_vmstats:get_collection(config)),
+  ok = katja_vmstats:start_collection(test, [{interval, 1000}, {metrics, [{"reductions_process", reductions_process, [katja_vmstats_collector]}]}]),
+  2 = length(katja_vmstats:get_collection(all)),
+  1 = length(katja_vmstats:get_collection(test)),
   ok = timer:sleep(?config(manual_delay, Config)), % Wait a bit, so that the timer can actually send stuff
   {ok, [_]} = katja:query_event([{service, "katja_vmstats reductions_process"}]),
-  ok = katja_vmstats:stop_timer(test),
-  1 = length(katja_vmstats:get_timer(all)),
-  ok = katja_vmstats:stop_timer(all),
-  0 = length(katja_vmstats:get_timer(all)).
+  ok = katja_vmstats:stop_collection(test),
+  1 = length(katja_vmstats:get_collection(all)),
+  ok = katja_vmstats:stop_collection(all),
+  0 = length(katja_vmstats:get_collection(all)).
 
 ignore_unknown_messages(_Config) ->
   ignored = gen_server:call(katja_vmstats_collector, foobar),

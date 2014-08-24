@@ -51,23 +51,31 @@
 -record(collector_state, {
   service :: iolist(),
   transport :: katja_connection:transport(),
+  collections :: [collection()]
+}).
+
+-record(collection, {
+  tref :: timer:tref(),
+  name :: atom(),
+  metrics :: [katja_vmstats:metric()],
+  interval :: pos_integer(),
   send_async :: boolean(),
-  async_sample_rate :: float(),
-  timer :: [{atom(), pos_integer(), timer:tref()}]
+  async_sample_rate :: float()
 }).
 
 % Types
 
 -type state() :: #collector_state{}.
+-type collection() :: #collection{}.
 
 % API
 -export([
   start_link/0,
   stop/0,
   collect/1,
-  get_timer/1,
-  start_timer/2,
-  stop_timer/1
+  get_collection/1,
+  start_collection/2,
+  stop_collection/1
 ]).
 
 % gen_server
@@ -104,23 +112,23 @@ stop() ->
 collect(Metrics) ->
   gen_server:cast(?MODULE, {collect, Metrics}).
 
-% @doc Returns a list of all timers registered under the given `Name'.
-%      Setting `Name' to `all' will return all registered timers.
--spec get_timer(atom()) -> [{atom(), pos_integer()}].
-get_timer(Name) ->
-  gen_server:call(?MODULE, {get_timer, Name}).
+% @doc Returns a list of all collections registered under the given `Name'.
+%      Setting `Name' to `all' will return all registered collections.
+-spec get_collection(atom()) -> [katja_vmstats:collection()].
+get_collection(Name) ->
+  gen_server:call(?MODULE, {get_collection, Name}).
 
-% @doc Registers a new timer under the given `Name'.<br />
+% @doc Registers a new collection under the given `Name'.<br />
 %      `MetricsIntervals' has to be a list like the `collector' configuration option.
--spec start_timer(atom(), [katja_vmstats:collection()]) -> ok.
-start_timer(Name, MetricsIntervals) ->
-  gen_server:call(?MODULE, {start_timer, Name, MetricsIntervals}).
+-spec start_collection(atom(), [katja_vmstats:collection()]) -> ok.
+start_collection(Name, MetricsIntervals) ->
+  gen_server:call(?MODULE, {start_collection, Name, MetricsIntervals}).
 
-% @doc Stops all timers registered under the given `Name'.
-%      Setting `Name' to `all' will stop all registered timers.
--spec stop_timer(atom()) -> ok.
-stop_timer(Name) ->
-  gen_server:call(?MODULE, {stop_timer, Name}).
+% @doc Stops all collections registered under the given `Name'.
+%      Setting `Name' to `all' will stop all registered collections.
+-spec stop_collection(atom()) -> ok.
+stop_collection(Name) ->
+  gen_server:call(?MODULE, {stop_collection, Name}).
 
 % gen_server
 
@@ -128,11 +136,9 @@ stop_timer(Name) ->
 init([]) ->
   Service = application:get_env(katja_vmstats, service, ?DEFAULT_SERVICE),
   Transport = application:get_env(katja_vmstats, transport, ?DEFAULT_TRANSPORT),
-  SendAsync = application:get_env(katja_vmstats, send_async, ?DEFAULT_SEND_ASYNC),
-  AsyncSampleRate = application:get_env(katja_vmstats, async_sample_rate, ?DEFAULT_ASYNC_SAMPLE_RATE),
   DelayCollection = application:get_env(katja_vmstats, delay_collection, ?DEFAULT_DELAY_COLLECTION),
   MetricsIntervals = application:get_env(katja_vmstats, collector, ?DEFAULT_COLLECTOR),
-  State = #collector_state{service=Service, transport=Transport, send_async=SendAsync, async_sample_rate=AsyncSampleRate, timer=[]},
+  State = #collector_state{service=Service, transport=Transport, collections=[]},
   if
     DelayCollection == 0 ->
       State2 = start_collection_intervals(config, MetricsIntervals, State),
@@ -143,23 +149,23 @@ init([]) ->
   end.
 
 % @hidden
-handle_call({get_timer, all}, _From, #collector_state{timer=Timer}=S) ->
-  Timer2 = [{TName, Interval} || {TName, Interval, _TRef} <- Timer],
-  {reply, Timer2, S};
-handle_call({get_timer, Name}, _From, #collector_state{timer=Timer}=S) ->
-  Timer2 = [{TName, Interval} || {TName, Interval, _TRef} <- Timer, Name =:= TName],
-  {reply, Timer2, S};
-handle_call({start_timer, Name, MetricsIntervals}, _From, State) ->
+handle_call({get_collection, all}, _From, #collector_state{collections=Collections}=S) ->
+  Collection = [collection_to_proplist(C) || C <- Collections],
+  {reply, Collection, S};
+handle_call({get_collection, Name}, _From, #collector_state{collections=Collections}=S) ->
+  Collection = [collection_to_proplist(C) || C <- Collections, Name =:= C#collection.name],
+  {reply, Collection, S};
+handle_call({start_collection, Name, MetricsIntervals}, _From, State) ->
   State2 = start_collection_intervals(Name, MetricsIntervals, State),
   {reply, ok, State2};
-handle_call({stop_timer, all}, _From, #collector_state{timer=Timer}=S) ->
-  ok = stop_collection_intervals(Timer),
-  S2 = S#collector_state{timer=[]},
+handle_call({stop_collection, all}, _From, #collector_state{collections=Collections}=S) ->
+  ok = stop_collection_intervals(Collections),
+  S2 = S#collector_state{collections=[]},
   {reply, ok, S2};
-handle_call({stop_timer, Name}, _From, #collector_state{timer=Timer}=S) ->
-  {TimerStop, TimerNext} = lists:splitwith(fun({TName, _Interval, _Tref}) -> Name =:= TName end, Timer),
-  ok = stop_collection_intervals(TimerStop),
-  S2 = S#collector_state{timer=TimerNext},
+handle_call({stop_collection, Name}, _From, #collector_state{collections=Collections}=S) ->
+  {CollectionStop, CollectionNext} = lists:splitwith(fun(#collection{name=TName}) -> Name =:= TName end, Collections),
+  ok = stop_collection_intervals(CollectionStop),
+  S2 = S#collector_state{collections=CollectionNext},
   {reply, ok, S2};
 handle_call(terminate, _From, State) ->
   {stop, normal, ok, State};
@@ -168,7 +174,10 @@ handle_call(_Request, _From, State) ->
 
 % @hidden
 handle_cast({collect, Metrics}, State) ->
-  ok = collect_events(Metrics, State),
+  SendAsync = application:get_env(katja_vmstats, send_async, ?DEFAULT_SEND_ASYNC),
+  AsyncSampleRate = application:get_env(katja_vmstats, async_sample_rate, ?DEFAULT_ASYNC_SAMPLE_RATE),
+  Collection = #collection{metrics=Metrics, send_async=SendAsync, async_sample_rate=AsyncSampleRate},
+  ok = collect_events(Collection, State),
   {noreply, State};
 handle_cast(_Msg, State) ->
   {noreply, State}.
@@ -184,8 +193,8 @@ handle_info(_Msg, State) ->
   {noreply, State}.
 
 % @hidden
-terminate(normal, #collector_state{timer=Timer}) ->
-  ok = stop_collection_intervals(Timer),
+terminate(normal, #collector_state{collections=Collections}) ->
+  ok = stop_collection_intervals(Collections),
   ok.
 
 % @hidden
@@ -196,20 +205,26 @@ code_change(_OldVsn, State, _Extra) ->
 
 -spec start_collection_intervals(atom(), [katja_vmstats:collection()], state()) -> state().
 start_collection_intervals(Name, MetricsIntervals, State) ->
-  lists:foldr(fun(MetricsInterval, #collector_state{timer=Timer}=S) ->
+  ConfigSendAsync = application:get_env(katja_vmstats, send_async, ?DEFAULT_SEND_ASYNC),
+  ConfigAsyncSampleRate = application:get_env(katja_vmstats, async_sample_rate, ?DEFAULT_ASYNC_SAMPLE_RATE),
+  lists:foldr(fun(MetricsInterval, #collector_state{collections=Collections}=S) ->
     Interval = noesis_proplists:get_value(interval, MetricsInterval),
+    SendAsync = noesis_proplists:get_value(send_async, MetricsInterval, ConfigSendAsync),
+    AsyncSampleRate = noesis_proplists:get_value(async_sample_rate, MetricsInterval, ConfigAsyncSampleRate),
     Metrics = noesis_proplists:get_value(metrics, MetricsInterval),
-    {ok, TRef} = timer:send_interval(Interval, {collect, Metrics}),
-    S#collector_state{timer=[{Name, Interval, TRef} | Timer]}
+    NewCollection = #collection{name=Name, metrics=Metrics, interval=Interval, send_async=SendAsync, async_sample_rate=AsyncSampleRate},
+    {ok, TRef} = timer:send_interval(Interval, {collect, NewCollection}),
+    NewCollection2 = NewCollection#collection{tref=TRef},
+    S#collector_state{collections=[NewCollection2 | Collections]}
   end, State, MetricsIntervals).
 
--spec stop_collection_intervals([{atom(), pos_integer(), timer:tref()}]) -> ok.
-stop_collection_intervals(Timer) ->
-  _ = [{ok, cancel} = timer:cancel(TRef) || {_Name, _Interval, TRef} <- Timer],
+-spec stop_collection_intervals([collection()]) -> ok.
+stop_collection_intervals(Collections) ->
+  _ = [{ok, cancel} = timer:cancel(C#collection.tref) || C <- Collections],
   ok.
 
--spec collect_events([katja_vmstats:metric()], state()) -> ok | {error, term()}.
-collect_events(Metrics, #collector_state{service=Service, transport=Transport, send_async=SendAsync, async_sample_rate=AsyncSampleRate}) ->
+-spec collect_events(collection(), state()) -> ok | {error, term()}.
+collect_events(#collection{metrics=Metrics, send_async=SendAsync, async_sample_rate=AsyncSampleRate}, #collector_state{service=Service, transport=Transport}) ->
   {ok, Events} = create_events(Service, Metrics),
   if
     SendAsync -> katja:send_events_async(katja_writer, Transport, Events, AsyncSampleRate);
@@ -243,13 +258,19 @@ get_metric_value({_Service, Fun, Args}) ->
 get_metric_value({_Service, Mod, Fun, Args}) ->
   apply(Mod, Fun, Args).
 
+-spec collection_to_proplist(collection()) -> noesis_proplists:proplist(atom(), term()).
+collection_to_proplist(Collection) ->
+  Fields = record_info(fields, collection),
+  [collection|Values] = tuple_to_list(Collection),
+  noesis_proplists:delete_keys([tref], lists:zip(Fields, Values)).
+
 % Tests (private functions)
 
 -ifdef(TEST).
 start_collection_intervals_test() ->
-  State = #collector_state{service="test", timer=[]},
+  State = #collector_state{service="test", collections=[]},
   State2 = start_collection_intervals(test, [[{interval, 10000}, {metrics, [process_count]}]], State),
-  ?assertMatch(#collector_state{timer=L} when length(L) == 1, State2),
+  ?assertMatch(#collector_state{collections=L} when length(L) == 1, State2),
   ?assertEqual(ok, terminate(normal, State2)).
 
 get_metric_service_test() ->

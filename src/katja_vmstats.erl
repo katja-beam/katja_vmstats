@@ -17,12 +17,19 @@
 
 -module(katja_vmstats).
 
--compile({no_auto_import, [start_timer/3]}).
-
 % Types
 
+-type collection_name() :: {name, atom()}.
+-type collection_metrics() :: {metrics, [metric()]}.
+-type collection_interval() :: {interval, pos_integer()}.
+-type collection_send_async() :: {send_async, boolean()}.
+-type collection_async_sample_rate() :: {async_sample_rate, float()}.
+
+-type collection_attributes() :: collection_name() | collection_metrics() | collection_interval() |
+                                 collection_send_async() | collection_async_sample_rate().
+
 -type metric() :: atom() | {iolist(), atom(), [any()]} | {iolist(), module(), atom(), [any()]}.
--type collection() :: [{interval, pos_integer()} | {metrics, metric()}].
+-type collection() :: [collection_attributes()].
 
 -export_type([
   metric/0,
@@ -34,9 +41,9 @@
   start/0,
   stop/0,
   collect/1,
-  get_timer/1,
-  start_timer/2,
-  stop_timer/1
+  get_collection/1,
+  start_collection/2,
+  stop_collection/1
 ]).
 
 % API
@@ -66,19 +73,19 @@ collect(Metric) when is_atom(Metric); is_tuple(Metric) ->
 collect(Metrics) ->
   katja_vmstats_collector:collect(Metrics).
 
-% @doc Returns a list of all timers registered under the given `Name'. Delegates to {@link katja_vmstats_collector:get_timer/1}.
--spec get_timer(atom()) -> [{atom(), pos_integer()}].
-get_timer(Name) ->
-  katja_vmstats_collector:get_timer(Name).
+% @doc Returns a list of all collections registered under the given `Name'. Delegates to {@link katja_vmstats_collector:get_collection/1}.
+-spec get_collection(atom()) -> [katja_vmstats:collection()].
+get_collection(Name) ->
+  katja_vmstats_collector:get_collection(Name).
 
-% @doc Registers a new timer under the given `Name'. Delegates to {@link katja_vmstats_collector:start_timer/2}.
--spec start_timer(atom(), katja_vmstats:collection() | [katja_vmstats:collection()]) -> ok.
-start_timer(Name, MetricsIntervals) when is_tuple(hd(MetricsIntervals)) ->
-  start_timer(Name, [MetricsIntervals]);
-start_timer(Name, MetricsIntervals) ->
-  katja_vmstats_collector:start_timer(Name, MetricsIntervals).
+% @doc Registers a new collection under the given `Name'. Delegates to {@link katja_vmstats_collector:start_collection/2}.
+-spec start_collection(atom(), katja_vmstats:collection() | [katja_vmstats:collection()]) -> ok.
+start_collection(Name, MetricsIntervals) when is_tuple(hd(MetricsIntervals)) ->
+  start_collection(Name, [MetricsIntervals]);
+start_collection(Name, MetricsIntervals) ->
+  katja_vmstats_collector:start_collection(Name, MetricsIntervals).
 
-% @doc Stops all timers registered under the given `Name'. Delegates to {@link katja_vmstats_collector:stop_timer/1}.
--spec stop_timer(atom()) -> ok.
-stop_timer(Name) ->
-  katja_vmstats_collector:stop_timer(Name).
+% @doc Stops all collections registered under the given `Name'. Delegates to {@link katja_vmstats_collector:stop_collection/1}.
+-spec stop_collection(atom()) -> ok.
+stop_collection(Name) ->
+  katja_vmstats_collector:stop_collection(Name).

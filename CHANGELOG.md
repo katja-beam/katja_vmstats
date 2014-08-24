@@ -5,6 +5,9 @@
 * Update Katja dependency to [v0.7](https://github.com/nifoc/katja/tree/v0.7)
 * Update noesis dependency to [v0.2.1](https://github.com/nifoc/noesis/tree/v0.2.1)
 * Allow setting a sample rate for asynchronous events using the `async_sample_rate` configuration option
+* The following functions in the `katja_vmstats` module have to been removed: `get_timer/1`, `start_timer/2` and `stop_timer/1`
+* The following functions have been added to the `katja_vmstats` module: `get_collection/1`, `start_collection/2`, `stop_collection/1`
+* `send_async` and `async_sample_rate` can be set on a per-collection basis
 
 ## 0.5
 
