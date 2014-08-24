@@ -29,7 +29,7 @@
 -export([
   config_events/1,
   manual_events/1,
-  programmatic_timer/1,
+  programmatic_collections/1,
   ignore_unknown_messages/1
 ]).
 
@@ -46,7 +46,7 @@ groups() ->
     {without_delay, [sequence], [
       config_events,
       manual_events,
-      programmatic_timer,
+      programmatic_collections,
       ignore_unknown_messages
     ]},
     {with_delay, [sequence], [
@@ -90,7 +90,7 @@ manual_events(Config) ->
   {ok, [ProcessLimitEvent]} = katja:query_event([{service, "katja_vmstats tuple_process_limit"}]),
   {metric, ProcessLimit} = lists:keyfind(metric, 1, ProcessLimitEvent).
 
-programmatic_timer(Config) ->
+programmatic_collections(Config) ->
   1 = length(katja_vmstats:get_collection(all)),
   1 = length(katja_vmstats:get_collection(config)),
   ok = katja_vmstats:start_collection(test, [{interval, 1000}, {metrics, [{"reductions_process", reductions_process, [katja_vmstats_collector]}]}]),
