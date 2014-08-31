@@ -56,12 +56,12 @@ groups() ->
 
 init_per_group(without_delay, Config) ->
   ok = katja_vmstats:start(),
-  [{manual_delay, 1500}, {auto_delay, 1500} | Config];
+  [{manual_delay, 2500}, {auto_delay, 2500} | Config];
 init_per_group(with_delay, Config) ->
   ok = application:set_env(katja_vmstats, send_async, true),
   ok = application:set_env(katja_vmstats, delay_collection, 5000),
   ok = katja_vmstats:start(),
-  [{manual_delay, 2000}, {auto_delay, 6500} | Config].
+  [{manual_delay, 3000}, {auto_delay, 6500} | Config].
 
 end_per_group(_Group, _Config) ->
   ok = katja_vmstats:stop(),
@@ -93,9 +93,12 @@ manual_events(Config) ->
 programmatic_collections(Config) ->
   1 = length(katja_vmstats:get_collection(all)),
   1 = length(katja_vmstats:get_collection(config)),
-  ok = katja_vmstats:start_collection(test, [{interval, 1000}, {metrics, [{"reductions_process", reductions_process, [katja_vmstats_collector]}]}]),
-  2 = length(katja_vmstats:get_collection(all)),
-  1 = length(katja_vmstats:get_collection(test)),
+  ok = katja_vmstats:start_collection(test, [
+    [{interval, 1000}, {metrics, [{"reductions_process", reductions_process, [katja_vmstats_collector]}]}],
+    [{interval, 1000}, {send_async, true}, {async_sample_rate, 0.5}, {metrics, [{"memory_process", memory_process, [katja_vmstats_collector]}]}]
+  ]),
+  3 = length(katja_vmstats:get_collection(all)),
+  2 = length(katja_vmstats:get_collection(test)),
   ok = timer:sleep(?config(manual_delay, Config)), % Wait a bit, so that the timer can actually send stuff
   {ok, [_]} = katja:query_event([{service, "katja_vmstats reductions_process"}]),
   ok = katja_vmstats:stop_collection(test),
