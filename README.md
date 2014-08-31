@@ -107,7 +107,7 @@ Collections can be stopped using `katja_vmstats:stop_collection/1`. You can set 
 
 ## Resources
 
-* [Generated EDoc](http://katja_vmstats.nifoc.pw/0.5/) ([All Versions](http://katja_vmstats.nifoc.pw))
+* [Generated EDoc](http://katja_vmstats.nifoc.pw/0.6/) ([All Versions](http://katja_vmstats.nifoc.pw))
 
 ## Related Projects
 
