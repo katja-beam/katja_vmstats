@@ -56,6 +56,10 @@
   reductions_total/0,
   registered_processes/0,
   run_queue/0,
+  socket_recv_package_count/1,
+  socket_recv_size/1,
+  socket_send_package_count/1,
+  socket_send_size/1,
   stack_size/1
 ]).
 
@@ -269,6 +273,26 @@ registered_processes() ->
 run_queue() ->
   erlang:statistics(run_queue).
 
+% @doc Returns the number of packets received by `Socket'.
+-spec socket_recv_package_count(inet:socket()) -> non_neg_integer().
+socket_recv_package_count(Socket) ->
+  socket_statistics(Socket, recv_cnt).
+
+% @doc Returns the number of bytes received by `Socket'.
+-spec socket_recv_size(inet:socket()) -> non_neg_integer().
+socket_recv_size(Socket) ->
+  socket_statistics(Socket, recv_oct).
+
+% @doc Returns the number of packets sent by `Socket'.
+-spec socket_send_package_count(inet:socket()) -> non_neg_integer().
+socket_send_package_count(Socket) ->
+  socket_statistics(Socket, send_cnt).
+
+% @doc Returns the number of bytes sent from `Socket'.
+-spec socket_send_size(inet:socket()) -> non_neg_integer().
+socket_send_size(Socket) ->
+  socket_statistics(Socket, send_oct).
+
 % @doc Return the stack size of the process in words.<br />
 %      If `Pid' is an `atom()', it will assume that it's the name of a registered process.
 -spec stack_size(atom() | pid()) -> pos_integer().
@@ -286,6 +310,13 @@ process_info_field(Pid, Field) when is_pid(Pid) ->
     {Field, Num} when is_number(Num) -> Num;
     {Field, List} when is_list(List) -> length(List);
     _ -> 0
+  end.
+
+-spec socket_statistics(inet:socket(), atom()) -> non_neg_integer().
+socket_statistics(Socket, Key) ->
+  case inet:getstat(Socket, [Key]) of
+    {ok, Stats} -> noesis_proplists:get_value(Key, Stats, 0);
+    {error, _Reason} -> 0
   end.
 
 -spec r16_ets_limit() -> pos_integer().

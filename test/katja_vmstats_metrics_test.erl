@@ -117,5 +117,33 @@ registered_processes_test() ->
 run_queue_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:run_queue()).
 
+socket_recv_package_count_test() ->
+  {ok, Socket} = gen_udp:open(0, [binary, {active, false}]),
+  ?assertEqual(0, katja_vmstats_metrics:socket_recv_package_count(Socket)),
+  ok = gen_udp:close(Socket),
+  ?assertEqual(0, katja_vmstats_metrics:socket_recv_package_count(Socket)).
+
+socket_recv_size_test() ->
+  {ok, Socket} = gen_udp:open(0, [binary, {active, false}]),
+  ?assertEqual(0, katja_vmstats_metrics:socket_recv_size(Socket)),
+  ok = gen_udp:close(Socket),
+  ?assertEqual(0, katja_vmstats_metrics:socket_recv_size(Socket)).
+
+socket_send_package_count_test() ->
+  {ok, Socket} = gen_udp:open(0, [binary, {active, false}]),
+  ?assertEqual(0, katja_vmstats_metrics:socket_send_package_count(Socket)),
+  ok = gen_udp:send(Socket, "10.99.99.99", 9001, <<1>>),
+  ?assertEqual(1, katja_vmstats_metrics:socket_send_package_count(Socket)),
+  ok = gen_udp:close(Socket),
+  ?assertEqual(0, katja_vmstats_metrics:socket_send_package_count(Socket)).
+
+socket_send_size_test() ->
+  {ok, Socket} = gen_udp:open(0, [binary, {active, false}]),
+  ?assertEqual(0, katja_vmstats_metrics:socket_send_size(Socket)),
+  ok = gen_udp:send(Socket, "10.99.99.99", 9001, <<"test">>),
+  ?assertEqual(4, katja_vmstats_metrics:socket_send_size(Socket)),
+  ok = gen_udp:close(Socket),
+  ?assertEqual(0, katja_vmstats_metrics:socket_send_size(Socket)).
+
 stack_size_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:stack_size(error_logger)).
