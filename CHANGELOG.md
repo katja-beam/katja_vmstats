@@ -3,7 +3,7 @@
 ## 0.7
 
 * Update Katja dependency to [v0.8](https://github.com/nifoc/katja/tree/v0.8)
-* New metrics: `socket_recv_package_count/1`, `socket_recv_size/1`, `socket_send_package_count/1`, `socket_send_size/1`
+* New metrics: `ets_size/1`, `ets_size_total/0`, `socket_recv_package_count/1`, `socket_recv_size/1`, `socket_send_package_count/1`, `socket_send_size/1`
 
 ## 0.6
 

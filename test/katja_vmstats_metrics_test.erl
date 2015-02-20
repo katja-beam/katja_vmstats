@@ -27,6 +27,12 @@ ets_count_test() ->
 ets_limit_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:ets_limit()).
 
+ets_size_test() ->
+  ?assertMatch(0, katja_vmstats_metrics:ets_size(table_does_not_exist)).
+
+ets_size_total_test() ->
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:ets_size_total()).
+
 ets_utilization_test() ->
   ?assertMatch(C when is_float(C), katja_vmstats_metrics:ets_utilization()).
 

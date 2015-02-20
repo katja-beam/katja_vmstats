@@ -26,6 +26,8 @@
   error_logger_message_queue/0,
   ets_count/0,
   ets_limit/0,
+  ets_size/1,
+  ets_size_total/0,
   ets_utilization/0,
   exact_reductions_last_call/0,
   exact_reductions_total/0,
@@ -99,6 +101,23 @@ ets_limit() ->
   catch
     error:badarg -> r16_ets_limit()
   end.
+
+% @doc Returns the number of objects inserted in the table.
+-spec ets_size(ets:tab()) -> non_neg_integer().
+ets_size(Tab) ->
+  case ets:info(Tab, size) of
+    undefined -> 0;
+    Size -> Size
+  end.
+
+% @doc Returns the total number of objects inserted into all tables.
+-spec ets_size_total() -> non_neg_integer().
+ets_size_total() ->
+  Tables = ets:all(),
+  lists:foldl(fun(Tab, Acc) ->
+    Size = ets_size(Tab),
+    Size + Acc
+  end, 0, Tables).
 
 % @doc Returns the ETS table utilization (number between 0 and 1) at the local node.
 -spec ets_utilization() -> float().
