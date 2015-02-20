@@ -69,7 +69,7 @@
 -spec all_message_queues() -> non_neg_integer().
 all_message_queues() ->
   Processes = processes(),
-  lists:foldr(fun(Pid, Acc) ->
+  lists:foldl(fun(Pid, Acc) ->
     Size = message_queue(Pid),
     Size + Acc
   end, 0, Processes).
