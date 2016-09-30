@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1
+
+[Documentation](http://katja_vmstats.nifoc.pw/0.7.1/)
+
+* Update Katja dependency to [v0.9.2](https://github.com/nifoc/katja/tree/v0.9.2) (thanks [@dch](https://github.com/dch))
+
 ## 0.7
 
 [Documentation](http://katja_vmstats.nifoc.pw/0.7/)
