@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.2
+
+* use our fork and drop rebar.config
+
 ## 0.7.1
 
 [Documentation](http://katja_vmstats.nifoc.pw/0.7.1/)
