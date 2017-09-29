@@ -1,9 +1,9 @@
 PROJECT = katja_vmstats
-PROJECT_VERSION = 0.7.3
+PROJECT_VERSION = 0.7.4
 
 DEPS = noesis katja
 dep_noesis = git https://github.com/nifoc/noesis v0.2.1
-dep_katja  = git https://github.com/iwantmyname/katja v0.9.4
+dep_katja  = git https://github.com/iwantmyname/katja v0.9.5
 
 TEST_DEPS = nifoc_ct_helper
 dep_nifoc_ct_helper = git https://github.com/nifoc/nifoc_ct_helper master
