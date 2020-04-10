@@ -1,0 +1,16 @@
+language: erlang
+otp_release:
+  - 18.3
+  - 17.5
+  - R16B03-1
+
+script:
+  - make dialyze
+  - make tests
+
+install:
+  - URL='https://aphyr.com/riemann/riemann_0.2.11_all.deb'; FILE=`mktemp`; DEBIAN_FRONTEND=noninteractive; wget "$URL" -qO $FILE && sudo dpkg -i $FILE; rm $FILE
+before_script:
+  - sudo service riemann start
+after_success:
+  - make coverage-report
