@@ -12,3 +12,5 @@ erl_crash.dump
 *.trace
 .erlang.mk/
 /*.d
+_build/
+
