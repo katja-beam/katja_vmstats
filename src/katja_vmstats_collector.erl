@@ -29,7 +29,6 @@
   [
     {interval, 1000},
     {metrics, [
-      error_logger_message_queue,
       loaded_modules,
       memory_atoms,
       memory_binaries,
