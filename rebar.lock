@@ -1,0 +1,14 @@
+{"1.1.0",
+[{<<"gpb">>,{pkg,<<"gpb">>,<<"4.10.5">>},1},
+ {<<"katja">>,
+  {git,"https://github.com/joaohf/katja",
+       {ref,"51ff6d1225190d416b4bf4a16f6decbcaf8ceaa1"}},
+  0},
+ {<<"noesis">>,
+  {git,"https://github.com/nifoc/noesis",
+       {ref,"c32f44f160f98a0e1af425ae79164609c71be185"}},
+  0}]}.
+[
+{pkg_hash,[
+ {<<"gpb">>, <<"7884C1579682B9EFAF774B532AEBDE2C896CDBDF8C85695E93C66E34414A26F5">>}]}
+].
