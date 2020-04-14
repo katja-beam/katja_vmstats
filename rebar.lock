@@ -1,7 +1,7 @@
 {"1.1.0",
 [{<<"gpb">>,{pkg,<<"gpb">>,<<"4.10.5">>},1},
  {<<"katja">>,
-  {git,"https://github.com/joaohf/katja",
+  {git,"https://github.com/katja-beam/katja",
        {ref,"51ff6d1225190d416b4bf4a16f6decbcaf8ceaa1"}},
   0},
  {<<"noesis">>,

@@ -2,11 +2,11 @@
 
 Easily send information about the Erlang VM to Riemann.
 
-[![Build Status](https://travis-ci.org/nifoc/katja_vmstats.png)](https://travis-ci.org/nifoc/katja_vmstats) [![Coverage Status](https://coveralls.io/repos/nifoc/katja_vmstats/badge.png?branch=master)](https://coveralls.io/r/nifoc/katja_vmstats?branch=master)
+[![Build Status](https://travis-ci.org/katja-beam/katja_vmstats.png)](https://travis-ci.org/katja-beam/katja_vmstats) [![Coverage Status](https://coveralls.io/repos/nifoc/katja_vmstats/badge.png?branch=master)](https://coveralls.io/r/katja-beam/katja_vmstats?branch=master)
 
 ## Status
 
-This is alpha software. Things might still change in ways that break everything.
+This is beta software. Things might still change in ways that break everything.
 
 ## Configuration
 
@@ -111,7 +111,7 @@ Collections can be stopped using `katja_vmstats:stop_collection/1`. You can set 
 
 ## Related Projects
 
-* [Katja](https://github.com/nifoc/katja) - A simple Riemann client written in Erlang
+* [Katja](https://github.com/katja-beam/katja) - A simple Riemann client written in Erlang
 
 ## License
 
@@ -119,6 +119,7 @@ Collections can be stopped using `katja_vmstats:stop_collection/1`. You can set 
 
 ```
 Copyright (c) 2014-2016, Daniel Kempkens <daniel@kempkens.io>
+Copyright (c) 2017-2020, Dave Cottlehuber <dch@skunkwerks.at>
 
 Permission to use, copy, modify, and/or distribute this software for any purpose
 with or without fee is hereby granted, provided that the above copyright notice
