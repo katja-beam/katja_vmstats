@@ -83,6 +83,7 @@ context_switches() ->
   ContextSwitches.
 
 % @doc Returns the size of the `error_logger' message queue at the local node.
+% @deprecated
 -spec error_logger_message_queue() -> non_neg_integer().
 error_logger_message_queue() ->
   message_queue(error_logger).
@@ -334,7 +335,7 @@ process_info_field(Pid, Field) when is_pid(Pid) ->
 -spec socket_statistics(inet:socket(), atom()) -> non_neg_integer().
 socket_statistics(Socket, Key) ->
   case inet:getstat(Socket, [Key]) of
-    {ok, Stats} -> noesis_proplists:get_value(Key, Stats, 0);
+    {ok, Stats} -> proplists:get_value(Key, Stats, 0);
     {error, _Reason} -> 0
   end.
 
