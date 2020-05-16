@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.2
+
+[Documentation](https://hexdocs.pm/katja_vmstats/0.10.0/index.html)
+
+* Add hex package and hexdocs
+* Remove noesis dependency
+* Remove nifoc_ct_helper dependency
+* Introduce rebar3 coveralls plugins
+
 ## 0.7.2
 
 * use our fork and drop rebar.config

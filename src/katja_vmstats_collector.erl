@@ -207,10 +207,10 @@ start_collection_intervals(Name, MetricsIntervals, State) ->
   ConfigSendAsync = application:get_env(katja_vmstats, send_async, ?DEFAULT_SEND_ASYNC),
   ConfigAsyncSampleRate = application:get_env(katja_vmstats, async_sample_rate, ?DEFAULT_ASYNC_SAMPLE_RATE),
   lists:foldr(fun(MetricsInterval, #collector_state{collections=Collections}=S) ->
-    Interval = noesis_proplists:get_value(interval, MetricsInterval),
-    SendAsync = noesis_proplists:get_value(send_async, MetricsInterval, ConfigSendAsync),
-    AsyncSampleRate = noesis_proplists:get_value(async_sample_rate, MetricsInterval, ConfigAsyncSampleRate),
-    Metrics = noesis_proplists:get_value(metrics, MetricsInterval),
+    Interval = proplists:get_value(interval, MetricsInterval),
+    SendAsync = proplists:get_value(send_async, MetricsInterval, ConfigSendAsync),
+    AsyncSampleRate = proplists:get_value(async_sample_rate, MetricsInterval, ConfigAsyncSampleRate),
+    Metrics = proplists:get_value(metrics, MetricsInterval),
     NewCollection = #collection{name=Name, metrics=Metrics, interval=Interval, send_async=SendAsync, async_sample_rate=AsyncSampleRate},
     {ok, TRef} = timer:send_interval(Interval, {collect, NewCollection}),
     NewCollection2 = NewCollection#collection{tref=TRef},
@@ -232,8 +232,9 @@ collect_events(#collection{metrics=Metrics, send_async=SendAsync, async_sample_r
 
 -spec create_events(iolist(), [katja_vmstats:metric()]) -> {ok, [katja:event()]}.
 create_events(Service, Metrics) ->
-  Timestamp = noesis_datetime:timestamp(),
-  Events = noesis_lists:pmap(fun(Metric) ->
+  {Mega, Secs, _} = os:timestamp(),
+  Timestamp = Mega * 1000000 + Secs,
+  Events = lists:map(fun(Metric) ->
     MetricService = get_metric_service(Service, Metric),
     MetricValue = get_metric_value(Metric),
     [{service, MetricService}, {time, Timestamp}, {tags, ["katja_vmstats"]}, {metric, MetricValue}]
@@ -257,11 +258,22 @@ get_metric_value({_Service, Fun, Args}) ->
 get_metric_value({_Service, Mod, Fun, Args}) ->
   apply(Mod, Fun, Args).
 
--spec collection_to_proplist(collection()) -> noesis_proplists:proplist(atom(), term()).
+-spec collection_to_proplist(collection()) -> proplists:proplist(atom(), term()).
 collection_to_proplist(Collection) ->
   Fields = record_info(fields, collection),
   [collection|Values] = tuple_to_list(Collection),
-  noesis_proplists:delete_keys([tref], lists:zip(Fields, Values)).
+  delete_keys([tref], lists:zip(Fields, Values)).
+
+% @doc Removes multiple keys from a property list and returns a new one. Duplicate keys are also removed.
+-spec delete_keys(Keys :: [term()], proplist:proplist()) -> proplist:proplist().
+delete_keys([], List) ->
+  List;
+delete_keys([Key|Rest]=Keys, List) ->
+  List2 = lists:keydelete(Key, 1, List),
+  case lists:keymember(Key, 1, List2) of
+    true -> delete_keys(Keys, List2);
+    false -> delete_keys(Rest, List2)
+  end.
 
 % Tests (private functions)
 

@@ -12,14 +12,19 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-define(PROCESS_NAME, kernel_sup).
+
 all_message_queues_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:all_message_queues()).
 
 context_switches_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:context_switches()).
 
+-ifndef(OTP_RELEASE).
+% OTP 20 or lower
 error_logger_message_queue_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:error_logger_message_queue()).
+-endif.
 
 ets_count_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:ets_count()).
@@ -49,7 +54,7 @@ garbage_collection_words_reclaimed_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:garbage_collection_words_reclaimed()).
 
 heap_size_test() ->
-  ?assertMatch(C when C > 0, katja_vmstats_metrics:heap_size(error_logger)).
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:heap_size(?PROCESS_NAME)).
 
 io_in_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:io_in()).
@@ -58,7 +63,7 @@ io_out_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:io_out()).
 
 links_test() ->
-  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:links(error_logger)).
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:links(?PROCESS_NAME)).
 
 loaded_modules_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:loaded_modules()).
@@ -73,7 +78,7 @@ memory_ets_test() ->
   ?assertMatch(C when is_integer(C), katja_vmstats_metrics:memory_ets()).
 
 memory_process_test() ->
-  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:memory_process(error_logger)).
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:memory_process(?PROCESS_NAME)).
 
 memory_processes_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:memory_processes()).
@@ -88,7 +93,7 @@ memory_total_test() ->
   ?assert(TotalMemory > SystemMemory).
 
 monitors_test() ->
-  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:monitors(error_logger)).
+  ?assertMatch(C when is_integer(C), katja_vmstats_metrics:monitors(?PROCESS_NAME)).
 
 port_count_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:port_count()).
@@ -112,7 +117,7 @@ reductions_last_call_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:reductions_last_call()).
 
 reductions_process_test() ->
-  ?assertMatch(C when C > 0, katja_vmstats_metrics:reductions_process(error_logger)).
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:reductions_process(?PROCESS_NAME)).
 
 reductions_total_test() ->
   ?assertMatch(C when C > 0, katja_vmstats_metrics:reductions_total()).
@@ -152,4 +157,4 @@ socket_send_size_test() ->
   ?assertEqual(0, katja_vmstats_metrics:socket_send_size(Socket)).
 
 stack_size_test() ->
-  ?assertMatch(C when C > 0, katja_vmstats_metrics:stack_size(error_logger)).
+  ?assertMatch(C when C > 0, katja_vmstats_metrics:stack_size(?PROCESS_NAME)).

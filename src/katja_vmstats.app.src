@@ -1,6 +1,6 @@
 {application, katja_vmstats, [
   {description, "Easily send information about the Erlang VM to Riemann."},
-  {vsn, "0.8.0"},
+  {vsn, "0.8.2"},
   {modules, []},
   {registered, [
     katja_vmstats_sup,
@@ -9,9 +9,10 @@
   {applications, [
     kernel,
     stdlib,
-    noesis,
     katja
   ]},
   {mod, {katja_vmstats_app, []}},
-  {env, []}
+  {env, []},
+  {licenses, ["ISC"]},
+  {links, [{"GitHub", "https://github.com/katja-beam/katja_vmstats"}]}
 ]}.
