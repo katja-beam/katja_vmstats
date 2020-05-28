@@ -7,9 +7,6 @@ otp_release:
 script:
   - ./rebar3 check
 
-install:
-  - URL='https://aphyr.com/riemann/riemann_0.2.11_all.deb'; FILE=`mktemp`; DEBIAN_FRONTEND=noninteractive; wget "$URL" -qO $FILE && sudo dpkg -i $FILE; rm $FILE
 before_script:
-  - sudo service riemann start
   - wget https://s3.amazonaws.com/rebar3/rebar3
   - chmod +x rebar3 
