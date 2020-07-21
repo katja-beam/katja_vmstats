@@ -21,6 +21,8 @@
 -export([
   all/0,
   groups/0,
+  init_per_suite/1,
+  end_per_suite/1,
   init_per_group/2,
   end_per_group/2
 ]).
@@ -53,6 +55,14 @@ groups() ->
       config_events
     ]}
   ].
+
+init_per_suite(Config) ->
+    {ok, _} = application:ensure_all_started(katja_echo),
+    Config.
+
+
+end_per_suite(_Config) ->
+    ok.
 
 init_per_group(without_delay, Config) ->
   ok = katja_vmstats:start(),
